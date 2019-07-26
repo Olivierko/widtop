@@ -14,6 +14,7 @@ namespace Widtop.Widgets
             {
                 new WallpaperWidget(),
                 new ClockWidget(),
+                new MouseWidget()
             };
 
             for (var index = 0; index < _widgets.Length; index++)
