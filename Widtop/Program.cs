@@ -1,13 +1,12 @@
-﻿using System;
+﻿using System.Threading;
 
 namespace Widtop
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            Console.WriteLine("Hello");
-            Console.ReadKey();
+            new ManualResetEvent(false).WaitOne();
         }
     }
 }
