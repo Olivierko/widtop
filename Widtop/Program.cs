@@ -25,8 +25,8 @@ namespace Widtop
                 _widgetService.Initialize(RenderTarget);
             }
 
-            var updateTimer = new Timer(x => Update(), null, 0, 16);
-            var renderTimer = new Timer(x => Render(), null, 1000, 16);
+            var updateTimer = new Timer(x => Update(), null, 0, 1000);
+            var renderTimer = new Timer(x => Render(), null, 1000, 1000);
 
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);

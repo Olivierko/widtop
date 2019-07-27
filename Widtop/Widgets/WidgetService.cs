@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using OpenHardwareMonitor.Hardware;
 
 namespace Widtop.Widgets
 {
@@ -9,12 +10,20 @@ namespace Widtop.Widgets
 
         public void Initialize(Bitmap renderTarget)
         {
+            var pc = new Computer
+            {
+                CPUEnabled = true,
+                GPUEnabled = true
+            };
+
             _renderTarget = renderTarget;
             _widgets = new Widget[]
             {
                 new WallpaperWidget(),
                 new ClockWidget(),
-                new MouseWidget()
+                new MouseWidget(),
+                new CPUWidget(pc), 
+                new GPUWidget(pc), 
             };
 
             for (var index = 0; index < _widgets.Length; index++)

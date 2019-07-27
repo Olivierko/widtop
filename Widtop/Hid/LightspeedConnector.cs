@@ -213,7 +213,7 @@ namespace Widtop.Hid
 
         private void LogBuffer(byte[] buffer)
         {
-            //_log("Raw:");
+            _log("Raw:");
             _log(string.Join(" ", buffer));
 
             var bits = string.Empty;
@@ -221,7 +221,8 @@ namespace Widtop.Hid
             {
                 bits += Convert.ToString(@byte, 2) + " ";
             }
-            //_log("Bits: ");
+            
+            _log("Bits: ");
             _log(bits);
 
             var hex = string.Empty;
@@ -230,18 +231,8 @@ namespace Widtop.Hid
                 hex += $"0x{@byte:X} ";
             }
 
-            //_log("Hex: ");
-            //_log(BitConverter.ToString(buffer).Replace("-", ""));
+            _log("Hex: ");
             _log(hex);
-
-            //////_log("UTF8: ");
-            //_log(System.Text.Encoding.UTF8.GetString(buffer));
-
-            //////_log("UTF16: ");
-            //_log(System.Text.Encoding.Unicode.GetString(buffer));
-
-            //////_log("ASCII: ");
-            //_log(System.Text.Encoding.ASCII.GetString(buffer));
         }
 
         private void EnsureConnection()
@@ -271,7 +262,6 @@ namespace Widtop.Hid
             new Timer(state => IssueReport(_virtualStream, _virtualDevice, ReportSize.Short, ReportType.Battery), null, 3000, 60000);
 
             // TODO: implement report processor for when device goes into idle/wakes up (investigate using wireshark)
-            // TODO: implement object for battery statuses and possibly idle/active once resolved
         }
     }
 }

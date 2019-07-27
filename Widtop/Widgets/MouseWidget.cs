@@ -13,7 +13,8 @@ namespace Widtop.Widgets
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush Brush => new SolidBrush(Color.White);
         private static Point ImageAnchor => new Point(880, 770);
-        private static Point LabelAnchor => Point.Add(ImageAnchor, new Size(32, 2));
+        private static Point PercentageAnchor => Point.Add(ImageAnchor, new Size(28, 2));
+        private static Point StatusAnchor => Point.Add(PercentageAnchor, new Size(50, 0));
 
         private decimal _batteryPercentage;
         private Image _image;
@@ -56,23 +57,28 @@ namespace Widtop.Widgets
 
         public override void Render(Graphics graphics)
         {
-            var status = string.Empty;
-
+            string status;
             switch (_status)
             {
-                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_WIRELESS_CHARGING:
-                    status = ">>>";
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_DISCHARGING:
+                    status = "<<";
                     break;
                 case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_CHARGING:
-                    status = ">>>";
+                    status = "‡";
+                    break;
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_WIRELESS_CHARGING:
+                    status = "∞";
                     break;
                 case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_FULLY_CHARGED:
-                    status = "(fully charged)";
+                    status = "√";
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             graphics.DrawImage(_image, ImageAnchor);
-            graphics.DrawString($"{_batteryPercentage:0.#}% {status}", Font, Brush, LabelAnchor);
+            graphics.DrawString($"{_batteryPercentage:0}%", Font, Brush, PercentageAnchor);
+            graphics.DrawString($"{status}", Font, Brush, StatusAnchor);
         }
     }
 }
