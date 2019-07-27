@@ -14,6 +14,8 @@ namespace Widtop.Hid
     {
         private const int VendorId = 0x046D;
         private const byte DeviceId = 0x01;
+        private const int ConnectionInterval = 1000;
+        private const int BatteryInterval = 60000;
 
         private const int WiredProductId = 0xC090;
         private const string VirtualWired = @"\\?\hid#vid_046d&pid_c090&mi_02&col01#8&2928b6d5&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}";
@@ -256,12 +258,23 @@ namespace Widtop.Hid
         public void Initialize()
         {
             // poll connections once per second starting immediately
-            new Timer(state => EnsureConnection(), null, 0, 1000);
+            var connectionTimer = new Timer(
+                state => EnsureConnection(), 
+                null, 
+                0,
+                ConnectionInterval
+            );
 
             // poll battery status once per minute starting after 3 seconds
-            new Timer(state => IssueReport(_virtualStream, _virtualDevice, ReportSize.Short, ReportType.Battery), null, 3000, 60000);
+            var batteryTimer = new Timer(
+                state => IssueReport(_virtualStream, _virtualDevice, ReportSize.Short, ReportType.Battery), 
+                null, 
+                3000,
+                BatteryInterval
+            );
 
-            // TODO: implement report processor for when device goes into idle/wakes up (investigate using wireshark)
+            GC.KeepAlive(connectionTimer);
+            GC.KeepAlive(batteryTimer);
         }
     }
 }
