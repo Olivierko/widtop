@@ -1,4 +1,6 @@
-﻿using System;
+﻿// ReSharper disable InconsistentlySynchronizedField
+
+using System;
 using System.Drawing;
 using System.Threading;
 using Widtop.Utility;
@@ -6,27 +8,34 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
-    // TODO: retrieve window resolution instead of hard-coding
     internal class Program
     {
-        private const int Width = 1920;
-        private const int Height = 1200;
+        private const int DisplayIndex = 0;
+        private const int Interval = 1000;
+
         private static Point Anchor => new Point(0, 0);
-        private static readonly Bitmap RenderTarget = new Bitmap(Width, Height);
+        private static Bitmap _buffer;
 
         private static WidgetService _widgetService;
 
         private static void Main(string[] args)
         {
-            _widgetService = new WidgetService();
-
-            lock (RenderTarget)
+            if (!Display.TryGetResolution(DisplayIndex, out var width, out var height))
             {
-                _widgetService.Initialize(RenderTarget);
+                throw new IndexOutOfRangeException();
             }
 
-            var updateTimer = new Timer(x => Update(), null, 0, 1000);
-            var renderTimer = new Timer(x => Render(), null, 1000, 1000);
+            _buffer = new Bitmap(width, height);
+
+            _widgetService = new WidgetService();
+
+            lock (_buffer)
+            {
+                _widgetService.Initialize(_buffer);
+            }
+
+            var updateTimer = new Timer(x => Update(), null, 0, Interval);
+            var renderTimer = new Timer(x => Render(), null, 0, Interval);
 
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);
@@ -54,11 +63,11 @@ namespace Widtop
                 return;
             }
 
-            lock (RenderTarget)
+            lock (_buffer)
             {
                 using (var graphics = Graphics.FromHdc(deviceContext))
                 {
-                    graphics.DrawImage(RenderTarget, Anchor);
+                    graphics.DrawImage(_buffer, Anchor);
                 }
             }
 

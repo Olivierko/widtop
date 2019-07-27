@@ -28,4 +28,8 @@
     <PackageReference Include="OpenHardwareMonitor" Version="0.7.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="System.Management" />
+  </ItemGroup>
+
 </Project>
