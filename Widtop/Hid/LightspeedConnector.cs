@@ -29,13 +29,11 @@ namespace Widtop.Hid
         private readonly Dictionary<string, bool> _connected;
         private readonly List<ReportProcessor> _processors;
 
+        private HidDevice _device;
+        private HidStream _stream;
+
         private string Virtual { get; set; }
         private string Physical { get; set; }
-
-        private HidDevice _virtualDevice;
-        private HidDevice _physicalDevice;
-        private HidStream _virtualStream;
-        private HidStream _physicalStream;
 
         public LightspeedConnector(Action<string> log, List<ReportProcessor> processors)
         {
@@ -54,14 +52,14 @@ namespace Widtop.Hid
                 .GetHidDevices(VendorId, WiredProductId)
                 .FirstOrDefault(x => x.DevicePath == VirtualWired);
 
-            if (SetupDevice(virtualWirelessDevice, out _virtualStream))
+            if (SetupDevice(virtualWirelessDevice, out _stream))
             {
-                _virtualDevice = virtualWirelessDevice;
+                _device = virtualWirelessDevice;
                 Virtual = VirtualWireless;
             }
-            else if (SetupDevice(virtualWiredDevice, out _virtualStream))
+            else if (SetupDevice(virtualWiredDevice, out _stream))
             {
-                _virtualDevice = virtualWiredDevice;
+                _device = virtualWiredDevice;
                 Virtual = VirtualWired;
             }
             else
@@ -78,14 +76,12 @@ namespace Widtop.Hid
                 .GetHidDevices(VendorId, WiredProductId)
                 .FirstOrDefault(x => x.DevicePath == PhysicalWired);
 
-            if (SetupDevice(physicalWirelessDevice, out _physicalStream))
+            if (SetupDevice(physicalWirelessDevice, out _))
             {
-                _physicalDevice = physicalWirelessDevice;
                 Physical = PhysicalWireless;
             }
-            else if (SetupDevice(physicalWiredDevice, out _physicalStream))
+            else if (SetupDevice(physicalWiredDevice, out _))
             {
-                _physicalDevice = physicalWiredDevice;
                 Physical = PhysicalWired;
             }
             else
@@ -267,7 +263,7 @@ namespace Widtop.Hid
 
             // poll battery status once per minute starting after 3 seconds
             var batteryTimer = new Timer(
-                state => IssueReport(_virtualStream, _virtualDevice, ReportSize.Short, ReportType.Battery), 
+                state => IssueReport(_stream, _device, ReportSize.Short, ReportType.Battery), 
                 null, 
                 3000,
                 BatteryInterval

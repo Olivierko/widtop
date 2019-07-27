@@ -16,12 +16,31 @@ namespace Widtop.Widgets
         private static Point PercentageAnchor => Point.Add(ImageAnchor, new Size(28, 2));
         private static Point StatusAnchor => Point.Add(PercentageAnchor, new Size(50, 0));
 
-        private decimal _batteryPercentage;
         private Image _image;
-        private BatteryVoltageStatus _status;
+        private decimal? _batteryPercentage;
+        private BatteryVoltageStatus? _status;
         private LightspeedConnector _lightspeedConnector;
 
         private static void Log(string message) { }
+
+        private string GetStatusString()
+        {
+            switch (_status)
+            {
+                case null:
+                    return "N/A";
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_DISCHARGING:
+                    return "<<";
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_CHARGING:
+                    return "‡";
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_WIRELESS_CHARGING:
+                    return "∞";
+                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_FULLY_CHARGED:
+                    return "√";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         private void OnBatteryUpdated(double volt, BatteryVoltageStatus status, double discharge, decimal percentage)
         {
@@ -57,27 +76,10 @@ namespace Widtop.Widgets
 
         public override void Render(Graphics graphics)
         {
-            string status;
-            switch (_status)
-            {
-                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_DISCHARGING:
-                    status = "<<";
-                    break;
-                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_CHARGING:
-                    status = "‡";
-                    break;
-                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_WIRELESS_CHARGING:
-                    status = "∞";
-                    break;
-                case BatteryVoltageStatus.BATTERY_VOLTAGE_STATUS_FULLY_CHARGED:
-                    status = "√";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            var status = GetStatusString();
 
             graphics.DrawImage(_image, ImageAnchor);
-            graphics.DrawString($"{_batteryPercentage:0}%", Font, Brush, PercentageAnchor);
+            graphics.DrawString($"{_batteryPercentage ?? -1:0}%", Font, Brush, PercentageAnchor);
             graphics.DrawString($"{status}", Font, Brush, StatusAnchor);
         }
     }

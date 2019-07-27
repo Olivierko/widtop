@@ -20,10 +20,10 @@ namespace Widtop.Utility
         {
             var result = IntPtr.Zero;
 
-            U32.EnumWindows((tophandle, topparamhandle) =>
+            U32.EnumWindows((lpEnumFunc, lParam) =>
             {
                 var p = U32.FindWindowEx(
-                    tophandle,
+                    lpEnumFunc,
                     IntPtr.Zero,
                     SHELLDLL_WINDOW,
                     null
@@ -33,7 +33,7 @@ namespace Widtop.Utility
                 {
                     result = U32.FindWindowEx(
                         IntPtr.Zero,
-                        tophandle,
+                        lpEnumFunc,
                         WORKER_WINDOW,
                         null
                     );
@@ -57,7 +57,7 @@ namespace Widtop.Utility
                 IntPtr.Zero,
                 U32.SendMessageTimeoutFlags.SMTO_NORMAL,
                 1000,
-                out var result
+                out _
             );
 
             deviceContext = U32.GetDCEx(

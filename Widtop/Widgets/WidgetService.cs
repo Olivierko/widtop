@@ -23,7 +23,7 @@ namespace Widtop.Widgets
                 new ClockWidget(),
                 new MouseWidget(),
                 new CPUWidget(pc), 
-                new GPUWidget(pc), 
+                new GPUWidget(pc)
             };
 
             for (var index = 0; index < _widgets.Length; index++)

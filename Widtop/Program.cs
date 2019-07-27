@@ -41,7 +41,6 @@ namespace Widtop
             GC.KeepAlive(renderTimer);
 
             new ManualResetEvent(false).WaitOne();
-            //DesktopHandler.Invalidate();
         }
 
         private static void Update()

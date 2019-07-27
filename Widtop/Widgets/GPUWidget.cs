@@ -58,7 +58,7 @@ namespace Widtop.Widgets
         public override void Render(Graphics graphics)
         {
             graphics.DrawImage(_image, ImageAnchor);
-            graphics.DrawString($"{_load:0}%", Font, Brush, LoadAnchor);
+            graphics.DrawString($"{_load ?? -1:0}%", Font, Brush, LoadAnchor);
             graphics.DrawString($"{_temperature ?? -1}°C", Font, Brush, TemperatureAnchor);
         }
     }

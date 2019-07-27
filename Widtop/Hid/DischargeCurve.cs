@@ -1,4 +1,6 @@
-﻿namespace Widtop.Hid
+﻿// ReSharper disable InconsistentNaming
+
+namespace Widtop.Hid
 {
     public static class DischargeCurve
     {

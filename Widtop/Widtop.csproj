@@ -3,6 +3,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net46</TargetFramework>
+    <RepositoryUrl>https://github.com/Olivierko/widtop</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <ApplicationIcon>widtop.ico</ApplicationIcon>
+    <ApplicationManifest>widtop.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
