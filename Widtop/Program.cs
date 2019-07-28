@@ -20,8 +20,6 @@ namespace Widtop
 
         private static void Main(string[] args)
         {
-            RegistryHelper.EnsureStartup();
-
             if (!Display.TryGetResolution(DisplayIndex, out var width, out var height))
             {
                 throw new IndexOutOfRangeException();
