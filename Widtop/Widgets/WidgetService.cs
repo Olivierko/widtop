@@ -20,7 +20,7 @@ namespace Widtop.Widgets
             _widgets = new Widget[]
             {
                 new WallpaperWidget(),
-                new ClockWidget(),
+                //new ClockWidget(),
                 new MouseWidget(),
                 new CPUWidget(pc), 
                 new GPUWidget(pc)
