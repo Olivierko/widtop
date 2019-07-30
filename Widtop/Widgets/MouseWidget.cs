@@ -48,6 +48,11 @@ namespace Widtop.Widgets
             _batteryPercentage = percentage;
         }
 
+        private void OnErrorReceived()
+        {
+            _lightspeedConnector.Reset();
+        }
+
         public override void Initialize()
         {
             var assembly = Assembly.GetExecutingAssembly();
@@ -60,10 +65,13 @@ namespace Widtop.Widgets
             var batteryProcessor = new BatteryReportProcessor(Log);
             batteryProcessor.BatteryUpdated += OnBatteryUpdated;
 
+            var errorProcessor = new ErrorReportProcessor(Log);
+            errorProcessor.ErrorReceived += OnErrorReceived;
+
             var processors = new List<ReportProcessor>
             {
                 batteryProcessor,
-                new ErrorReportProcessor(Log)
+                errorProcessor
             };
 
             _lightspeedConnector = new LightspeedConnector(

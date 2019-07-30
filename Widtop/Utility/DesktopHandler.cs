@@ -16,6 +16,27 @@ namespace Widtop.Utility
         private const string WALLPAPER = "Wallpaper";
         private const uint SPAWN_WORKER = 0x052C;
 
+        public static void Initialize()
+        {
+            var window = U32.FindWindow(PROGRAM_MANAGER, null);
+            U32.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)0);
+            U32.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)1);
+        }
+
+        public static void Invalidate()
+        {
+            var currentMachine = Registry.CurrentUser;
+            var controlPanel = currentMachine.OpenSubKey(CONTROL_PANEL);
+            var desktop = controlPanel?.OpenSubKey(DESKTOP);
+
+            U32.SystemParametersInfo(
+                U32.SPI.SPI_SETDESKWALLPAPER,
+                0,
+                Convert.ToString(desktop?.GetValue(WALLPAPER)),
+                U32.SPIF.SPIF_UPDATEINIFILE
+            );
+        }
+
         public static bool TryGetWorkerWindow(out IntPtr workerWindow)
         {
             var result = IntPtr.Zero;
@@ -53,7 +74,7 @@ namespace Widtop.Utility
             U32.SendMessageTimeout(
                 window,
                 SPAWN_WORKER,
-                new IntPtr(0),
+                IntPtr.Zero,
                 IntPtr.Zero,
                 U32.SendMessageTimeoutFlags.SMTO_NORMAL,
                 1000,
@@ -69,20 +90,6 @@ namespace Widtop.Utility
             return
                 deviceContext != IntPtr.Zero &&
                 workerWindow != IntPtr.Zero;
-        }
-
-        public static void Invalidate()
-        {
-            var currentMachine = Registry.CurrentUser;
-            var controlPanel = currentMachine.OpenSubKey(CONTROL_PANEL);
-            var desktop = controlPanel?.OpenSubKey(DESKTOP);
-
-            U32.SystemParametersInfo(
-                U32.SPI.SPI_SETDESKWALLPAPER,
-                0,
-                Convert.ToString(desktop?.GetValue(WALLPAPER)),
-                U32.SPIF.SPIF_UPDATEINIFILE
-            );
         }
     }
 }

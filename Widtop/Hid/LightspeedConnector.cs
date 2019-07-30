@@ -1,5 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 // ReSharper disable IdentifierTypo
+// ReSharper disable NotAccessedField.Local
 
 using System;
 using System.Collections.Generic;
@@ -26,11 +27,13 @@ namespace Widtop.Hid
         private const string PhysicalWireless = @"\\?\hid#vid_046d&pid_c539&mi_02&col02#8&20b6abbf&0&0001#{4d1e55b2-f16f-11cf-88cb-001111000030}";
 
         private readonly Action<string> _log;
-        private readonly Dictionary<string, bool> _connected;
+        private readonly Dictionary<string, bool> _connections;
         private readonly List<ReportProcessor> _processors;
 
         private HidDevice _device;
         private HidStream _stream;
+        private Timer _connectionTimer;
+        private Timer _batteryTimer;
 
         private string Virtual { get; set; }
         private string Physical { get; set; }
@@ -38,7 +41,7 @@ namespace Widtop.Hid
         public LightspeedConnector(Action<string> log, List<ReportProcessor> processors)
         {
             _log = log;
-            _connected = new Dictionary<string, bool>();
+            _connections = new Dictionary<string, bool>();
             _processors = processors;
         }
 
@@ -120,25 +123,25 @@ namespace Widtop.Hid
             stream.Closed += (sender, args) =>
             {
                 _log($"Stream closed for: {device.DevicePath}");
-                _connected[device.DevicePath] = false;
+                _connections[device.DevicePath] = false;
             };
 
             stream.InterruptRequested += (sender, eventArgs) =>
             {
                 _log($"Stream interrupt requested for: {device.DevicePath}");
-                _connected[device.DevicePath] = false;
+                _connections[device.DevicePath] = false;
             };
 
             receiver.Started += (sender, eventArgs) =>
             {
                 _log($"Receiver started for: {device.DevicePath}");
-                _connected[device.DevicePath] = true;
+                _connections[device.DevicePath] = true;
             };
 
             receiver.Stopped += (sender, eventArgs) =>
             {
                 _log($"Receiver stopped for: {device.DevicePath}");
-                _connected[device.DevicePath] = false;
+                _connections[device.DevicePath] = false;
             };
 
             receiver.Received += (sender, eventArgs) =>
@@ -171,7 +174,7 @@ namespace Widtop.Hid
             };
 
             receiver.Start(stream);
-            return true;
+            return receiver.IsRunning;
         }
 
         private void IssueReport(HidStream stream, HidDevice device, ReportSize reportSize, ReportType reportType, params byte[] parameters)
@@ -179,8 +182,8 @@ namespace Widtop.Hid
             var canIssueReport =
                 device != null &&
                 stream != null &&
-                _connected.ContainsKey(device.DevicePath) &&
-                _connected[device.DevicePath];
+                _connections.ContainsKey(device.DevicePath) &&
+                _connections[device.DevicePath];
 
             if (!canIssueReport)
             {
@@ -235,15 +238,15 @@ namespace Widtop.Hid
 
         private void EnsureConnection()
         {
-            var devicesAreConnected =
+            var connected =
                 !string.IsNullOrEmpty(Virtual) &&
                 !string.IsNullOrEmpty(Physical) &&
-                _connected.ContainsKey(Virtual) &&
-                _connected.ContainsKey(Physical) &&
-                _connected[Virtual] &&
-                _connected[Physical];
+                _connections.ContainsKey(Virtual) &&
+                _connections.ContainsKey(Physical) &&
+                _connections[Virtual] &&
+                _connections[Physical];
 
-            if (devicesAreConnected)
+            if (connected)
             {
                 return;
             }
@@ -254,7 +257,7 @@ namespace Widtop.Hid
         public void Initialize()
         {
             // poll connections once per second starting immediately
-            var connectionTimer = new Timer(
+            _connectionTimer = new Timer(
                 state => EnsureConnection(), 
                 null, 
                 0,
@@ -262,15 +265,19 @@ namespace Widtop.Hid
             );
 
             // poll battery status once per minute starting after 3 seconds
-            var batteryTimer = new Timer(
+            _batteryTimer = new Timer(
                 state => IssueReport(_stream, _device, ReportSize.Short, ReportType.Battery), 
                 null, 
                 3000,
                 BatteryInterval
             );
+        }
 
-            GC.KeepAlive(connectionTimer);
-            GC.KeepAlive(batteryTimer);
+        public void Reset()
+        {
+            Virtual = null;
+            Physical = null;
+            _connections.Clear();
         }
     }
 }

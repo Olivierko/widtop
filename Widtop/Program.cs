@@ -8,6 +8,8 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
+    // TODO: move display index, and interval into app.config
+    // TODO: evaluate if a better strategy for updating/rendering can be implemented (render time avg at 70ms atm)
     internal class Program
     {
         private const int DisplayIndex = 0;
@@ -33,6 +35,9 @@ namespace Widtop
             {
                 _widgetService.Initialize(_buffer);
             }
+
+            DesktopHandler.Initialize();
+            DesktopHandler.Invalidate();
 
             var updateTimer = new Timer(x => Update(), null, 0, Interval);
             var renderTimer = new Timer(x => Render(), null, 0, Interval);
