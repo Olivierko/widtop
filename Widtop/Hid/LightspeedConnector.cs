@@ -13,18 +13,14 @@ namespace Widtop.Hid
 {
     public class LightspeedConnector
     {
-        private const int VendorId = 0x046D;
         private const byte DeviceId = 0x01;
+        private const int VendorId = 0x046D;
         private const int ConnectionInterval = 1000;
         private const int BatteryInterval = 60000;
-
         private const int WiredProductId = 0xC090;
-        private const string VirtualWired = @"\\?\hid#vid_046d&pid_c090&mi_02&col01#8&2928b6d5&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}";
-        private const string PhysicalWired = @"\\?\hid#vid_046d&pid_c090&mi_02&col02#8&2928b6d5&0&0001#{4d1e55b2-f16f-11cf-88cb-001111000030}";
-
         private const int WirelessProductId = 0xC539;
-        private const string VirtualWireless = @"\\?\hid#vid_046d&pid_c539&mi_02&col01#8&20b6abbf&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}";
-        private const string PhysicalWireless = @"\\?\hid#vid_046d&pid_c539&mi_02&col02#8&20b6abbf&0&0001#{4d1e55b2-f16f-11cf-88cb-001111000030}";
+        private const string VirtualPathMatch = "mi_02&col01";
+        private const string PhysicalPathMatch = "mi_02&col02";
 
         private readonly Action<string> _log;
         private readonly Dictionary<string, bool> _connections;
@@ -49,21 +45,21 @@ namespace Widtop.Hid
         {
             var virtualWirelessDevice = DeviceList.Local
                 .GetHidDevices(VendorId, WirelessProductId)
-                .FirstOrDefault(x => x.DevicePath == VirtualWireless);
+                .FirstOrDefault(x => x.DevicePath.Contains(VirtualPathMatch));
 
             var virtualWiredDevice = DeviceList.Local
                 .GetHidDevices(VendorId, WiredProductId)
-                .FirstOrDefault(x => x.DevicePath == VirtualWired);
+                .FirstOrDefault(x => x.DevicePath.Contains(VirtualPathMatch));
 
             if (SetupDevice(virtualWirelessDevice, out _stream))
             {
                 _device = virtualWirelessDevice;
-                Virtual = VirtualWireless;
+                Virtual = virtualWirelessDevice?.DevicePath;
             }
             else if (SetupDevice(virtualWiredDevice, out _stream))
             {
                 _device = virtualWiredDevice;
-                Virtual = VirtualWired;
+                Virtual = virtualWiredDevice?.DevicePath;
             }
             else
             {
@@ -73,19 +69,19 @@ namespace Widtop.Hid
 
             var physicalWirelessDevice = DeviceList.Local
                 .GetHidDevices(VendorId, WirelessProductId)
-                .FirstOrDefault(x => x.DevicePath == PhysicalWireless);
+                .FirstOrDefault(x => x.DevicePath.Contains(PhysicalPathMatch));
 
             var physicalWiredDevice = DeviceList.Local
                 .GetHidDevices(VendorId, WiredProductId)
-                .FirstOrDefault(x => x.DevicePath == PhysicalWired);
+                .FirstOrDefault(x => x.DevicePath.Contains(PhysicalPathMatch));
 
             if (SetupDevice(physicalWirelessDevice, out _))
             {
-                Physical = PhysicalWireless;
+                Physical = physicalWirelessDevice?.DevicePath;
             }
             else if (SetupDevice(physicalWiredDevice, out _))
             {
-                Physical = PhysicalWired;
+                Physical = physicalWiredDevice?.DevicePath;
             }
             else
             {
