@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using Widtop.Utility;
 
 namespace Widtop.Widgets
@@ -40,11 +41,17 @@ namespace Widtop.Widgets
                 // TODO: construct an image based on the position setting
                 //var position = interop.GetPosition();
 
-                var wallpaper = !string.IsNullOrEmpty(path)
-                    ? Image.FromFile(path)
-                    : null;
+                if (string.IsNullOrEmpty(path))
+                {
+                    continue;
+                }
 
-                _wallpapers[monitorIndex] = wallpaper;
+                if (!File.Exists(path))
+                {
+                    continue;
+                }
+
+                _wallpapers[monitorIndex] = Image.FromFile(path);
             }
         }
 

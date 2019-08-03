@@ -5,6 +5,7 @@ using Widtop.Hid;
 
 namespace Widtop.Widgets
 {
+    // TODO: refactor LightspeedConnector to resolve mouse model itself and create instance per model with appropriate data for discharge, name etc
     public class MouseWidget : Widget
     {
         private const int BarHeight = 6;
