@@ -8,33 +8,38 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
-    // TODO: move display index, and interval into app.config
-    // TODO: evaluate if a better strategy for updating/rendering can be implemented (render time avg at 70ms atm)
+    // TODO: evaluate if a better strategy for rendering can be implemented (render time avg at 170ms atm)
+    // TODO: see over current update loop for widgets, eg: OpenhardwareMonitor seems slow
     internal class Program
     {
-        private const int DisplayIndex = 0;
         private const int Interval = 1000;
 
-        private static Point Anchor => new Point(0, 0);
-        private static Bitmap _buffer;
-
+        private static Buffer[] _buffers;
         private static WidgetService _widgetService;
 
         private static void Main(string[] args)
         {
-            if (!Display.TryGetResolution(DisplayIndex, out var width, out var height))
-            {
-                throw new IndexOutOfRangeException();
-            }
+            var displays = DisplayHandler.GetAll();
 
-            _buffer = new Bitmap(width, height);
+            _buffers = new Buffer[displays.Count];
+
+            for (var index = 0; index < displays.Count; index++)
+            {
+                var display = displays[index];
+
+                var renderTarget = new Bitmap(
+                    display.Width, 
+                    display.Height
+                );
+
+                _buffers[index] = new Buffer(
+                    display, 
+                    renderTarget
+                );
+            }
 
             _widgetService = new WidgetService();
-
-            lock (_buffer)
-            {
-                _widgetService.Initialize(_buffer);
-            }
+            _widgetService.Initialize(_buffers);
 
             DesktopHandler.Initialize();
             DesktopHandler.Invalidate();
@@ -67,15 +72,21 @@ namespace Widtop
                 return;
             }
 
-            lock (_buffer)
+            lock (_buffers)
             {
                 using (var graphics = Graphics.FromHdc(deviceContext))
                 {
-                    graphics.DrawImage(_buffer, Anchor);
+                    foreach (var buffer in _buffers)
+                    {
+                        graphics.DrawImage(
+                            buffer.RenderTarget,
+                            new Point(buffer.Display.X, buffer.Display.Y)
+                        );
+                    }
                 }
             }
 
-            U32.ReleaseDC(workerWindow, deviceContext);
+            Native.ReleaseDC(workerWindow, deviceContext);
         }
     }
 }

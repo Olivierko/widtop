@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Reflection;
 using Widtop.Hid;
 
 namespace Widtop.Widgets
@@ -10,9 +9,8 @@ namespace Widtop.Widgets
     {
         private const int BarHeight = 6;
         private const string Name = "G703";
-        private const string ImageResourceName = "Widtop.Content.mouse_widget_image.png";
 
-        private static Rectangle Area => new Rectangle(880, 790, 400, 40);
+        private static Rectangle Area => new Rectangle(2560 + 240, 240 + 20, 400, 40);
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush TextBrush => new SolidBrush(Color.White);
         private static SolidBrush StatusBrush => new SolidBrush(Color.FromArgb(121, 121, 121));
@@ -25,7 +23,6 @@ namespace Widtop.Widgets
         private decimal? _batteryPercentage;
         private BatteryVoltageStatus? _status;
         private LightspeedConnector _lightspeedConnector;
-        private Image _image;
 
         private static void Log(string message) { }
 
@@ -61,13 +58,6 @@ namespace Widtop.Widgets
 
         public override void Initialize()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            using (var stream = assembly.GetManifestResourceStream(ImageResourceName))
-            {
-                _image = Image.FromStream(stream ?? throw new InvalidOperationException());
-            }
-
             var batteryProcessor = new BatteryReportProcessor(Log);
             batteryProcessor.BatteryUpdated += OnBatteryUpdated;
 
@@ -88,50 +78,52 @@ namespace Widtop.Widgets
             _lightspeedConnector.Initialize();
         }
 
-        public override void Render(Graphics graphics)
+        public override void Render(Buffer buffer, Graphics graphics)
         {
+            if (!buffer.Matches(Area, out var localArea))
+            {
+                return;
+            }
+
             var status = GetStatusString();
             
-            //graphics.FillRectangle(new SolidBrush(Color.Red), Area);
-            //graphics.DrawImage(_image, Area.Left, Area.Top);
-
             graphics.DrawString(
                 Name, 
                 Font, 
                 TextBrush,
-                Area, 
+                localArea, 
                 NameFormat
             );
 
             graphics.DrawString(
                 status,
                 Font,
-                StatusBrush, 
-                Area,
+                StatusBrush,
+                localArea,
                 StatusFormat
             );
 
             graphics.DrawString(
                 $"{_batteryPercentage ?? -1:0}%", 
                 Font, 
-                TextBrush, 
-                Area, 
+                TextBrush,
+                localArea, 
                 ValueFormat
             );
 
             graphics.FillRectangle(
                 BarBackgroundBrush, 
-                Area.Left, 
-                Area.Bottom - BarHeight, 
-                Area.Width, 
+                localArea.Left, 
+                localArea.Bottom - BarHeight,
+                localArea.Width, 
                 BarHeight
             );
 
             graphics.FillRectangle(
-                BarForegroundBrush, 
-                Area.Left, 
-                Area.Bottom - BarHeight, 
-                (int)(Area.Width / 100 * _batteryPercentage ?? 0),
+                BarForegroundBrush,
+                localArea.Left,
+                localArea.Bottom - BarHeight, 
+                (int)(localArea.Width / 100 * _batteryPercentage ?? 0),
                 BarHeight
             );
         }

@@ -1,34 +1,70 @@
-﻿using System.Drawing;
-using Microsoft.Win32;
+﻿using System.Collections.Generic;
+using System.Drawing;
+using Widtop.Utility;
 
 namespace Widtop.Widgets
 {
     public class WallpaperWidget : Widget
     {
-        private Image _wallpaper;
+        private SolidBrush _backgroundBrush;
+        private Dictionary<uint, Image> _wallpapers;
+
+        private static Color ToColor(uint colorHex)
+        {
+            var r = (byte)(colorHex >> 0);
+            var g = (byte)(colorHex >> 8);
+            var b = (byte)(colorHex >> 16);
+
+            return Color.FromArgb(r, g, b);
+        }
 
         public override void Initialize()
         {
-            var currentMachine = Registry.CurrentUser;
-            var controlPanel = currentMachine.OpenSubKey("Control Panel");
-            var desktop = controlPanel?.OpenSubKey("Desktop");
+            _wallpapers = new Dictionary<uint, Image>();
 
-            var wallpaper = desktop?.GetValue("Wallpaper");
-            var path = wallpaper as string;
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            var interop = (COM.IDesktopWallpaper) new COM.DesktopWallpaper();
 
-            _wallpaper = !string.IsNullOrEmpty(path)
-                ? Image.FromFile(path)
-                : null;
+            var colorHex = interop.GetBackgroundColor();
+            var backgroundColor = ToColor(colorHex);
+            _backgroundBrush = new SolidBrush(backgroundColor);
+
+            var monitorCount = interop.GetMonitorDevicePathCount();
+
+            for (uint monitorIndex = 0; monitorIndex < monitorCount; monitorIndex++)
+            {
+                var devicePath = interop.GetMonitorDevicePathAt(monitorIndex);
+
+                var path = interop.GetWallpaper(devicePath);
+
+                // TODO: construct an image based on the position setting
+                //var position = interop.GetPosition();
+
+                var wallpaper = !string.IsNullOrEmpty(path)
+                    ? Image.FromFile(path)
+                    : null;
+
+                _wallpapers[monitorIndex] = wallpaper;
+            }
         }
 
-        public override void Render(Graphics graphics)
+        public override void Render(Buffer buffer, Graphics graphics)
         {
-            if (_wallpaper == null)
+            if (_wallpapers.TryGetValue(buffer.Display.Index, out var wallpaper))
             {
-                return;
+                graphics.DrawImage(wallpaper, new Point(0, 0));
             }
+            else
+            {
+                var area = new Rectangle(
+                    0, 
+                    0, 
+                    buffer.Display.Width, 
+                    buffer.Display.Height
+                );
 
-            graphics.DrawImage(_wallpaper, new Point(0, 0));
+                graphics.FillRectangle(_backgroundBrush, area);
+            }
         }
     }
 }

@@ -10,24 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Content\cpu_widget_image.png" />
-    <None Remove="Content\gpu_widget_image.png" />
-    <None Remove="Content\mouse_widget_image.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Content\cpu_widget_image.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Content\gpu_widget_image.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Content\mouse_widget_image.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="HidSharp" Version="2.1.0" />
     <PackageReference Include="OpenHardwareMonitor" Version="0.7.1" />
   </ItemGroup>

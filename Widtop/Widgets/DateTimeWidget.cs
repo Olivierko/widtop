@@ -5,7 +5,7 @@ namespace Widtop.Widgets
 {
     public class DateTimeWidget : Widget
     {
-        private static Rectangle Area => new Rectangle(640, 770, 220, 200);
+        private static Rectangle Area => new Rectangle(2560, 240, 220, 200);
         private static Font PrimaryFont => new Font("Agency FB", 72);
         private static Font SecondaryFont => new Font("Agency FB", 30);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
@@ -32,26 +32,29 @@ namespace Widtop.Widgets
             }
         }
 
-        public override void Render(Graphics graphics)
+        public override void Render(Buffer buffer, Graphics graphics)
         {
+            if (!buffer.Matches(Area, out var localArea))
+            {
+                return;
+            }
+
             var now = DateTime.Now;
             var daySuffix = GetDaySuffix(now.Day);
-
-            //graphics.FillRectangle(new SolidBrush(Color.Yellow), Area);
 
             graphics.DrawString(
                 $"{now:HH:mm}", 
                 PrimaryFont, 
-                PrimaryBrush, 
-                Area, 
+                PrimaryBrush,
+                localArea, 
                 PrimaryFormat
             );
 
             graphics.DrawString(
                 $"{now:dddd}{Environment.NewLine}{now.Day}{daySuffix} {now:MMMM}", 
                 SecondaryFont, 
-                SecondaryBrush, 
-                Area, 
+                SecondaryBrush,
+                localArea, 
                 SecondaryFormat
             );
         }

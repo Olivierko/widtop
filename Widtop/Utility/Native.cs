@@ -6,15 +6,18 @@ using System.Runtime.InteropServices;
 
 namespace Widtop.Utility
 {
-    public static class U32
+    public static class Native
     {
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        public delegate bool EnumMonitorsProc(IntPtr hMonitor, IntPtr hdcMonitor, ref Rectangle lprcMonitor, IntPtr dwData);
+
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -27,12 +30,47 @@ namespace Widtop.Utility
         public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDc);
 
         [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SystemParametersInfo(SPI uiAction, uint uiParam, string pvParam, SPIF fWinIni);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+
+        [DllImport("User32.dll", SetLastError = true)]
+        public static extern IntPtr MonitorFromPoint(Point pt, MonitorOptions dwFlags);
+
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SystemParametersInfo(SPI uiAction, uint uiParam, string pvParam, SPIF fWinIni);
+        public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, EnumMonitorsProc lpfnEnum, IntPtr dwData);
 
-        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        public struct MonitorInfoEx
+        {
+            public uint Size;
+            public Rectangle Monitor;
+            public Rectangle WorkArea;
+            public uint Flags;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string DeviceName;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Point
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct Rectangle
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
 
         [Flags]
         public enum DeviceContextValues : uint
@@ -73,7 +111,15 @@ namespace Widtop.Utility
         public enum SPI : uint
         {
             NONE = 0x00,
-            SPI_SETDESKWALLPAPER = 0x0014
+            SPI_SETDESKWALLPAPER = 0x0014,
+            SPI_GETDESKWALLPAPER = 0x0073
+        }
+
+        public enum MonitorOptions : uint
+        {
+            MONITOR_DEFAULTTONULL = 0x00000000,
+            MONITOR_DEFAULTTOPRIMARY = 0x00000001,
+            MONITOR_DEFAULTTONEAREST = 0x00000002
         }
     }
 }

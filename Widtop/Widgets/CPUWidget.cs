@@ -1,9 +1,7 @@
 ﻿// ReSharper disable InconsistentNaming
 
-using System;
 using System.Drawing;
 using System.Linq;
-using System.Reflection;
 using OpenHardwareMonitor.Hardware;
 
 namespace Widtop.Widgets
@@ -14,9 +12,8 @@ namespace Widtop.Widgets
         private const string Name = "CPU";
         private const string CPULoadKey = "CPU Total";
         private const string CPUTemperatureKey = "CPU Package";
-        private const string ImageResourceName = "Widtop.Content.cpu_widget_image.png";
 
-        private static Rectangle Area => new Rectangle(880, 850, 400, 40);
+        private static Rectangle Area => new Rectangle(2560 + 240, 240 + 80, 400, 40);
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush TextBrush => new SolidBrush(Color.White);
         private static SolidBrush StatusBrush => new SolidBrush(Color.FromArgb(121, 121, 121));
@@ -30,21 +27,10 @@ namespace Widtop.Widgets
 
         private float? _load;
         private float? _temperature;
-        private Image _image;
 
         public CPUWidget(Computer pc)
         {
             _pc = pc;
-        }
-
-        public override void Initialize()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            using (var stream = assembly.GetManifestResourceStream(ImageResourceName))
-            {
-                _image = Image.FromStream(stream ?? throw new InvalidOperationException());
-            }
         }
 
         public override void Update()
@@ -62,16 +48,18 @@ namespace Widtop.Widgets
             }
         }
 
-        public override void Render(Graphics graphics)
+        public override void Render(Buffer buffer, Graphics graphics)
         {
-            //graphics.FillRectangle(new SolidBrush(Color.Green), Area);
-            //graphics.DrawImage(_image, Area.Left, Area.Top);
+            if (!buffer.Matches(Area, out var localArea))
+            {
+                return;
+            }
 
             graphics.DrawString(
                 Name,
                 Font,
                 TextBrush,
-                Area,
+                localArea,
                 NameFormat
             );
 
@@ -79,7 +67,7 @@ namespace Widtop.Widgets
                 $"{_temperature ?? -1}°C",
                 Font,
                 StatusBrush,
-                Area,
+                localArea,
                 StatusFormat
             );
 
@@ -87,23 +75,23 @@ namespace Widtop.Widgets
                 $"{_load ?? -1:0}%",
                 Font,
                 TextBrush,
-                Area,
+                localArea,
                 ValueFormat
             );
 
             graphics.FillRectangle(
                 BarBackgroundBrush,
-                Area.Left,
-                Area.Bottom - BarHeight,
-                Area.Width,
+                localArea.Left,
+                localArea.Bottom - BarHeight,
+                localArea.Width,
                 BarHeight
             );
 
             graphics.FillRectangle(
                 BarForegroundBrush,
-                Area.Left,
-                Area.Bottom - BarHeight,
-                (int)(Area.Width / 100 * _load ?? 0),
+                localArea.Left,
+                localArea.Bottom - BarHeight,
+                (int)(localArea.Width / 100 * _load ?? 0),
                 BarHeight
             );
         }

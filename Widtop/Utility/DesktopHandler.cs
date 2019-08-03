@@ -18,9 +18,9 @@ namespace Widtop.Utility
 
         public static void Initialize()
         {
-            var window = U32.FindWindow(PROGRAM_MANAGER, null);
-            U32.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)0);
-            U32.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)1);
+            var window = Native.FindWindow(PROGRAM_MANAGER, null);
+            Native.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)0);
+            Native.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)1);
         }
 
         public static void Invalidate()
@@ -29,11 +29,11 @@ namespace Widtop.Utility
             var controlPanel = currentMachine.OpenSubKey(CONTROL_PANEL);
             var desktop = controlPanel?.OpenSubKey(DESKTOP);
 
-            U32.SystemParametersInfo(
-                U32.SPI.SPI_SETDESKWALLPAPER,
+            Native.SystemParametersInfo(
+                Native.SPI.SPI_SETDESKWALLPAPER,
                 0,
                 Convert.ToString(desktop?.GetValue(WALLPAPER)),
-                U32.SPIF.SPIF_UPDATEINIFILE
+                Native.SPIF.SPIF_UPDATEINIFILE
             );
         }
 
@@ -41,9 +41,9 @@ namespace Widtop.Utility
         {
             var result = IntPtr.Zero;
 
-            U32.EnumWindows((lpEnumFunc, lParam) =>
+            Native.EnumWindows((lpEnumFunc, lParam) =>
             {
-                var p = U32.FindWindowEx(
+                var p = Native.FindWindowEx(
                     lpEnumFunc,
                     IntPtr.Zero,
                     SHELLDLL_WINDOW,
@@ -52,7 +52,7 @@ namespace Widtop.Utility
 
                 if (p != IntPtr.Zero)
                 {
-                    result = U32.FindWindowEx(
+                    result = Native.FindWindowEx(
                         IntPtr.Zero,
                         lpEnumFunc,
                         WORKER_WINDOW,
@@ -69,22 +69,22 @@ namespace Widtop.Utility
 
         public static bool TryGetDeviceContext(IntPtr workerWindow, out IntPtr deviceContext)
         {
-            var window = U32.FindWindow(PROGRAM_MANAGER, null);
+            var window = Native.FindWindow(PROGRAM_MANAGER, null);
 
-            U32.SendMessageTimeout(
+            Native.SendMessageTimeout(
                 window,
                 SPAWN_WORKER,
                 IntPtr.Zero,
                 IntPtr.Zero,
-                U32.SendMessageTimeoutFlags.SMTO_NORMAL,
+                Native.SendMessageTimeoutFlags.SMTO_NORMAL,
                 1000,
                 out _
             );
 
-            deviceContext = U32.GetDCEx(
+            deviceContext = Native.GetDCEx(
                 workerWindow,
                 IntPtr.Zero,
-                U32.DeviceContextValues.DCX_WINDOW | U32.DeviceContextValues.DCX_CACHE | U32.DeviceContextValues.DCX_LOCKWINDOWUPDATE
+                Native.DeviceContextValues.DCX_WINDOW | Native.DeviceContextValues.DCX_CACHE | Native.DeviceContextValues.DCX_LOCKWINDOWUPDATE
             );
 
             return

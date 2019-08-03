@@ -5,10 +5,10 @@ namespace Widtop.Widgets
 {
     public class WidgetService
     {
-        private Bitmap _buffer;
+        private Buffer[] _buffers;
         private Widget[] _widgets;
 
-        public void Initialize(Bitmap buffer)
+        public void Initialize(Buffer[] buffers)
         {
             var pc = new Computer
             {
@@ -16,7 +16,7 @@ namespace Widtop.Widgets
                 GPUEnabled = true
             };
 
-            _buffer = buffer;
+            _buffers = buffers;
             _widgets = new Widget[]
             {
                 new WallpaperWidget(),
@@ -42,13 +42,16 @@ namespace Widtop.Widgets
 
         public void Render()
         {
-            lock (_buffer)
+            lock (_buffers)
             {
-                using (var graphics = Graphics.FromImage(_buffer))
+                foreach (var buffer in _buffers)
                 {
-                    for (var index = 0; index < _widgets.Length; index++)
+                    using (var graphics = Graphics.FromImage(buffer.RenderTarget))
                     {
-                        _widgets[index].Render(graphics);
+                        for (var index = 0; index < _widgets.Length; index++)
+                        {
+                            _widgets[index].Render(buffer, graphics);
+                        }
                     }
                 }
             }
