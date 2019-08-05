@@ -79,20 +79,15 @@ namespace Widtop.Widgets
             _lightspeedConnector.Initialize();
         }
 
-        public override void Render(Buffer buffer, Graphics graphics)
+        public override void Render(Graphics graphics)
         {
-            if (!buffer.Matches(Area, out var localArea))
-            {
-                return;
-            }
-
             var status = GetStatusString();
             
             graphics.DrawString(
                 Name, 
                 Font, 
                 TextBrush,
-                localArea, 
+                Area, 
                 NameFormat
             );
 
@@ -100,7 +95,7 @@ namespace Widtop.Widgets
                 status,
                 Font,
                 StatusBrush,
-                localArea,
+                Area,
                 StatusFormat
             );
 
@@ -108,23 +103,23 @@ namespace Widtop.Widgets
                 $"{_batteryPercentage ?? -1:0}%", 
                 Font, 
                 TextBrush,
-                localArea, 
+                Area, 
                 ValueFormat
             );
 
             graphics.FillRectangle(
                 BarBackgroundBrush, 
-                localArea.Left, 
-                localArea.Bottom - BarHeight,
-                localArea.Width, 
+                Area.Left, 
+                Area.Bottom - BarHeight,
+                Area.Width, 
                 BarHeight
             );
 
             graphics.FillRectangle(
                 BarForegroundBrush,
-                localArea.Left,
-                localArea.Bottom - BarHeight, 
-                (int)(localArea.Width / 100 * _batteryPercentage ?? 0),
+                Area.Left,
+                Area.Bottom - BarHeight, 
+                (int)(Area.Width / 100 * _batteryPercentage ?? 0),
                 BarHeight
             );
         }

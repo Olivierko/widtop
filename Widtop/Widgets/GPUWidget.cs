@@ -38,27 +38,22 @@ namespace Widtop.Widgets
             {
                 _pc.Open();
 
-                var gpu = _pc.Hardware.First(x => x.HardwareType == HardwareType.GpuNvidia);
+                var gpu = _pc.Hardware.FirstOrDefault(x => x.HardwareType == HardwareType.GpuNvidia || x.HardwareType == HardwareType.GpuAti);
 
-                _load = gpu.Sensors.First(x => x.SensorType == SensorType.Load && x.Name == GPUCoreKey).Value;
-                _temperature = gpu.Sensors.First(x => x.SensorType == SensorType.Temperature && x.Name == GPUCoreKey).Value;
+                _load = gpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Load && x.Name == GPUCoreKey)?.Value;
+                _temperature = gpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Temperature && x.Name == GPUCoreKey)?.Value;
 
                 _pc.Close();
             }
         }
 
-        public override void Render(Buffer buffer, Graphics graphics)
+        public override void Render(Graphics graphics)
         {
-            if (!buffer.Matches(Area, out var localArea))
-            {
-                return;
-            }
-
             graphics.DrawString(
                 Name,
                 Font,
                 TextBrush,
-                localArea,
+                Area,
                 NameFormat
             );
 
@@ -66,7 +61,7 @@ namespace Widtop.Widgets
                 $"{_temperature ?? -1}°C",
                 Font,
                 StatusBrush,
-                localArea,
+                Area,
                 StatusFormat
             );
 
@@ -74,23 +69,23 @@ namespace Widtop.Widgets
                 $"{_load ?? -1:0}%",
                 Font,
                 TextBrush,
-                localArea,
+                Area,
                 ValueFormat
             );
 
             graphics.FillRectangle(
                 BarBackgroundBrush,
-                localArea.Left,
-                localArea.Bottom - BarHeight,
-                localArea.Width,
+                Area.Left,
+                Area.Bottom - BarHeight,
+                Area.Width,
                 BarHeight
             );
 
             graphics.FillRectangle(
                 BarForegroundBrush,
-                localArea.Left,
-                localArea.Bottom - BarHeight,
-                (int)(localArea.Width / 100 * _load ?? 0),
+                Area.Left,
+                Area.Bottom - BarHeight,
+                (int)(Area.Width / 100 * _load ?? 0),
                 BarHeight
             );
         }

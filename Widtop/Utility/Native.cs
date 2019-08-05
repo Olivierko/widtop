@@ -35,9 +35,6 @@ namespace Widtop.Utility
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
 
-        [DllImport("User32.dll", SetLastError = true)]
-        public static extern IntPtr MonitorFromPoint(Point pt, MonitorOptions dwFlags);
-
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
@@ -54,13 +51,6 @@ namespace Widtop.Utility
 
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
             public string DeviceName;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Point
-        {
-            public int X;
-            public int Y;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -113,13 +103,6 @@ namespace Widtop.Utility
             NONE = 0x00,
             SPI_SETDESKWALLPAPER = 0x0014,
             SPI_GETDESKWALLPAPER = 0x0073
-        }
-
-        public enum MonitorOptions : uint
-        {
-            MONITOR_DEFAULTTONULL = 0x00000000,
-            MONITOR_DEFAULTTOPRIMARY = 0x00000001,
-            MONITOR_DEFAULTTONEAREST = 0x00000002
         }
     }
 }

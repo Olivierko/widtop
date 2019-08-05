@@ -56,22 +56,6 @@ namespace Widtop.Utility
         [Guid("C2CF3110-460E-4fc1-B9D0-8A1C0C9CC4BD")]
         public class DesktopWallpaper { }
 
-        [Flags]
-        public enum DesktopSlideshowOptions
-        {
-            None = 0,
-            ShuffleImages = 0x01
-        }
-
-        [Flags]
-        public enum DesktopSlideshowState
-        {
-            None = 0,
-            Enabled = 0x01,
-            Slideshow = 0x02,
-            DisabledByRemoteSession = 0x04
-        }
-
         public enum DesktopSlideshowDirection
         {
             Forward = 0,

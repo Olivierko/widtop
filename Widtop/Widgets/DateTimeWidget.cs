@@ -32,13 +32,8 @@ namespace Widtop.Widgets
             }
         }
 
-        public override void Render(Buffer buffer, Graphics graphics)
+        public override void Render(Graphics graphics)
         {
-            if (!buffer.Matches(Area, out var localArea))
-            {
-                return;
-            }
-
             var now = DateTime.Now;
             var daySuffix = GetDaySuffix(now.Day);
 
@@ -46,7 +41,7 @@ namespace Widtop.Widgets
                 $"{now:HH:mm}", 
                 PrimaryFont, 
                 PrimaryBrush,
-                localArea, 
+                Area, 
                 PrimaryFormat
             );
 
@@ -54,7 +49,7 @@ namespace Widtop.Widgets
                 $"{now:dddd}{Environment.NewLine}{now.Day}{daySuffix} {now:MMMM}", 
                 SecondaryFont, 
                 SecondaryBrush,
-                localArea, 
+                Area, 
                 SecondaryFormat
             );
         }

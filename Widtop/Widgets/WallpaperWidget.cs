@@ -7,8 +7,20 @@ namespace Widtop.Widgets
 {
     public class WallpaperWidget : Widget
     {
+        private class Wallpaper
+        {
+            public Rectangle Area { get; }
+            public Image Image { get; }
+
+            public Wallpaper(Rectangle area, Image image)
+            {
+                Area = area;
+                Image = image;
+            }
+        }
+
         private SolidBrush _backgroundBrush;
-        private Dictionary<uint, Image> _wallpapers;
+        private List<Wallpaper> _wallpapers;
 
         private static Color ToColor(uint colorHex)
         {
@@ -21,7 +33,7 @@ namespace Widtop.Widgets
 
         public override void Initialize()
         {
-            _wallpapers = new Dictionary<uint, Image>();
+            _wallpapers = new List<Wallpaper>();
 
             // ReSharper disable once SuspiciousTypeConversion.Global
             var interop = (COM.IDesktopWallpaper) new COM.DesktopWallpaper();
@@ -38,39 +50,40 @@ namespace Widtop.Widgets
 
                 var path = interop.GetWallpaper(devicePath);
 
+                var workArea = interop.GetMonitorRECT(devicePath);
+
                 // TODO: construct an image based on the position setting
                 //var position = interop.GetPosition();
 
-                if (string.IsNullOrEmpty(path))
-                {
-                    continue;
-                }
+                var rectangle = new Rectangle(
+                    workArea.Left, 
+                    workArea.Top, 
+                    workArea.Right - workArea.Left, 
+                    workArea.Bottom - workArea.Top
+                );
 
-                if (!File.Exists(path))
-                {
-                    continue;
-                }
+                var image = !string.IsNullOrEmpty(path) && File.Exists(path) 
+                    ? Image.FromFile(path) 
+                    : null;
 
-                _wallpapers[monitorIndex] = Image.FromFile(path);
+                var wallpaper = new Wallpaper(rectangle, image);
+
+                _wallpapers.Add(wallpaper);
             }
         }
 
-        public override void Render(Buffer buffer, Graphics graphics)
+        public override void Render(Graphics graphics)
         {
-            if (_wallpapers.TryGetValue(buffer.Display.Index, out var wallpaper))
+            foreach (var wallpaper in _wallpapers)
             {
-                graphics.DrawImage(wallpaper, new Point(0, 0));
-            }
-            else
-            {
-                var area = new Rectangle(
-                    0, 
-                    0, 
-                    buffer.Display.Width, 
-                    buffer.Display.Height
-                );
-
-                graphics.FillRectangle(_backgroundBrush, area);
+                if (wallpaper.Image != null)
+                {
+                    graphics.DrawImageUnscaled(wallpaper.Image, new Point(wallpaper.Area.X, wallpaper.Area.Y));
+                }
+                else
+                {
+                    graphics.FillRectangle(_backgroundBrush, wallpaper.Area);
+                }
             }
         }
     }

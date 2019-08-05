@@ -8,6 +8,6 @@ namespace Widtop.Widgets
 
         public virtual void Update() { }
 
-        public virtual void Render(Buffer buffer, Graphics graphics) { }
+        public virtual void Render(Graphics graphics) { }
     }
 }

@@ -3,12 +3,12 @@ using OpenHardwareMonitor.Hardware;
 
 namespace Widtop.Widgets
 {
+    // TODO: enforce empty ctor on widgets and load them by scanning assembly/a given folder
     public class WidgetService
     {
-        private Buffer[] _buffers;
         private Widget[] _widgets;
 
-        public void Initialize(Buffer[] buffers)
+        public void Initialize()
         {
             var pc = new Computer
             {
@@ -16,7 +16,6 @@ namespace Widtop.Widgets
                 GPUEnabled = true
             };
 
-            _buffers = buffers;
             _widgets = new Widget[]
             {
                 new WallpaperWidget(),
@@ -26,34 +25,25 @@ namespace Widtop.Widgets
                 new GPUWidget(pc)
             };
 
-            for (var index = 0; index < _widgets.Length; index++)
+            foreach (var widget in _widgets)
             {
-                _widgets[index].Initialize();
+                widget.Initialize();
             }
         }
 
         public void Update()
         {
-            for (var index = 0; index < _widgets.Length; index++)
+            foreach (var widget in _widgets)
             {
-                _widgets[index].Update();
+                widget.Update();
             }
         }
-
-        public void Render()
+        
+        public void Render(Graphics graphics)
         {
-            lock (_buffers)
+            foreach (var widget in _widgets)
             {
-                foreach (var buffer in _buffers)
-                {
-                    using (var graphics = Graphics.FromImage(buffer.RenderTarget))
-                    {
-                        for (var index = 0; index < _widgets.Length; index++)
-                        {
-                            _widgets[index].Render(buffer, graphics);
-                        }
-                    }
-                }
+                widget.Render(graphics);
             }
         }
     }

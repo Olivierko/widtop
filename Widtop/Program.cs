@@ -1,6 +1,7 @@
 ﻿// ReSharper disable InconsistentlySynchronizedField
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using Widtop.Utility;
@@ -8,38 +9,45 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
-    // TODO: evaluate if a better strategy for rendering can be implemented (render time avg at 170ms atm)
-    // TODO: see over current update loop for widgets, eg: OpenhardwareMonitor seems slow
+    // TODO: see over current update loop for widgets, eg: Open hardware monitor seems slow
     internal class Program
     {
         private const int Interval = 1000;
 
-        private static Buffer[] _buffers;
+        private static Rectangle _area;
+        private static IntPtr _workerWindow;
+        private static Stopwatch _stopwatch = new Stopwatch();
         private static WidgetService _widgetService;
+        private static BufferedGraphicsContext _bufferedGraphicsContext;
 
         private static void Main(string[] args)
         {
             var displays = DisplayHandler.GetAll();
 
-            _buffers = new Buffer[displays.Count];
-
-            for (var index = 0; index < displays.Count; index++)
+            var width = 0;
+            var height = 0;
+            foreach (var display in displays)
             {
-                var display = displays[index];
+                width += display.Width;
+                height += display.Height;
+            }
 
-                var renderTarget = new Bitmap(
-                    display.Width, 
-                    display.Height
-                );
+            _area = new Rectangle(
+                0, 
+                0, 
+                width, 
+                height
+            );
 
-                _buffers[index] = new Buffer(
-                    display, 
-                    renderTarget
-                );
+            if (!DesktopHandler.TryGetWorkerWindow(out _workerWindow))
+            {
+                return;
             }
 
             _widgetService = new WidgetService();
-            _widgetService.Initialize(_buffers);
+            _widgetService.Initialize();
+
+            _bufferedGraphicsContext = new BufferedGraphicsContext();
 
             DesktopHandler.Initialize();
             DesktopHandler.Invalidate();
@@ -60,33 +68,21 @@ namespace Widtop
 
         private static void Render()
         {
-            _widgetService.Render();
+            _stopwatch.Restart();
 
-            if (!DesktopHandler.TryGetWorkerWindow(out var workerWindow))
+            if (!DesktopHandler.TryGetDeviceContext(_workerWindow, out var deviceContext))
             {
                 return;
             }
 
-            if (!DesktopHandler.TryGetDeviceContext(workerWindow, out var deviceContext))
+            using (var bufferedGraphics = _bufferedGraphicsContext.Allocate(deviceContext, _area))
             {
-                return;
+                _widgetService.Render(bufferedGraphics.Graphics);
+                bufferedGraphics.Render(deviceContext);
             }
-
-            lock (_buffers)
-            {
-                using (var graphics = Graphics.FromHdc(deviceContext))
-                {
-                    foreach (var buffer in _buffers)
-                    {
-                        graphics.DrawImage(
-                            buffer.RenderTarget,
-                            new Point(buffer.Display.X, buffer.Display.Y)
-                        );
-                    }
-                }
-            }
-
-            Native.ReleaseDC(workerWindow, deviceContext);
+            
+            Native.ReleaseDC(_workerWindow, deviceContext);
+            Debug.WriteLine($"Render() took: {_stopwatch.ElapsedMilliseconds}ms");
         }
     }
 }
