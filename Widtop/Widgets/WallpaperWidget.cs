@@ -5,6 +5,7 @@ using Widtop.Utility;
 
 namespace Widtop.Widgets
 {
+    [Widget(Z = -1)]
     public class WallpaperWidget : Widget
     {
         private class Wallpaper
@@ -31,7 +32,7 @@ namespace Widtop.Widgets
             return Color.FromArgb(r, g, b);
         }
 
-        public override void Initialize()
+        public override void Initialize(IWidgetService service)
         {
             _wallpapers = new List<Wallpaper>();
 

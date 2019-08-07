@@ -39,11 +39,6 @@ namespace Widtop
                 height
             );
 
-            if (!DesktopHandler.TryGetWorkerWindow(out _workerWindow))
-            {
-                return;
-            }
-
             _widgetService = new WidgetService();
             _widgetService.Initialize();
 
@@ -70,6 +65,11 @@ namespace Widtop
         {
             _stopwatch.Restart();
 
+            if (_workerWindow == IntPtr.Zero && !DesktopHandler.TryGetWorkerWindow(out _workerWindow))
+            {
+                return;
+            }
+            
             if (!DesktopHandler.TryGetDeviceContext(_workerWindow, out var deviceContext))
             {
                 return;

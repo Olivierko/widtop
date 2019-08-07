@@ -22,14 +22,15 @@ namespace Widtop.Widgets
         private static StringFormat StatusFormat => new StringFormat { LineAlignment = StringAlignment.Center, Alignment = StringAlignment.Center };
         private static StringFormat ValueFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
-        private readonly Computer _pc;
+        private Computer _pc;
 
         private float? _load;
         private float? _temperature;
 
-        public GPUWidget(Computer pc)
+        public override void Initialize(IWidgetService service)
         {
-            _pc = pc;
+            _pc = service.Get<Computer>();
+            _pc.GPUEnabled = true;
         }
 
         public override void Update()

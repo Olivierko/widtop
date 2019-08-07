@@ -1,33 +1,54 @@
-﻿using System.Drawing;
-using OpenHardwareMonitor.Hardware;
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Reflection;
+using Widtop.Utility;
 
 namespace Widtop.Widgets
 {
-    // TODO: enforce empty ctor on widgets and load them by scanning assembly/a given folder
-    public class WidgetService
+    public class WidgetService : IWidgetService
     {
-        private Widget[] _widgets;
+        private readonly List<Widget> _widgets;
+        private readonly Dictionary<Type, object> _objects;
+
+        public WidgetService()
+        {
+            _widgets = new List<Widget>();
+            _objects = new Dictionary<Type, object>();
+        }
+
+        public T Get<T>() where T : new()
+        {
+            var type = typeof(T);
+
+            if (!_objects.TryGetValue(type, out var item) || !(item is T))
+            {
+                _objects[type] = new T();
+            }
+
+            return (T)_objects[type];
+        }
 
         public void Initialize()
         {
-            var pc = new Computer
-            {
-                CPUEnabled = true,
-                GPUEnabled = true
-            };
+            var sorter = new DuplicateKeyComparer<int>();
+            var sortedWidgets = new SortedList<int, Widget>(sorter);
 
-            _widgets = new Widget[]
+            var types = Scanner.GetSubclassTypesOf<Widget>();
+
+            foreach (var type in types)
             {
-                new WallpaperWidget(),
-                new DateTimeWidget(),
-                new MouseWidget(),
-                new CPUWidget(pc), 
-                new GPUWidget(pc)
-            };
+                var attribute = type.GetCustomAttribute<WidgetAttribute>();
+
+                var widget = (Widget)Activator.CreateInstance(type);
+                sortedWidgets.Add(attribute?.Z ?? int.MaxValue, widget);
+            }
+
+            _widgets.AddRange(sortedWidgets.Values);
 
             foreach (var widget in _widgets)
             {
-                widget.Initialize();
+                widget.Initialize(this);
             }
         }
 
