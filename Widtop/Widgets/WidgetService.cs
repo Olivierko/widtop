@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Reflection;
-using Widtop.Utility;
 
 namespace Widtop.Widgets
 {
@@ -31,24 +29,19 @@ namespace Widtop.Widgets
 
         public void Initialize()
         {
-            var sorter = new DuplicateKeyComparer<int>();
-            var sortedWidgets = new SortedList<int, Widget>(sorter);
-
-            var types = Scanner.GetSubclassTypesOf<Widget>();
-
-            foreach (var type in types)
+            _widgets.AddRange(new Widget[]
             {
-                var attribute = type.GetCustomAttribute<WidgetAttribute>();
-
-                var widget = (Widget)Activator.CreateInstance(type);
-                sortedWidgets.Add(attribute?.Z ?? int.MaxValue, widget);
-            }
-
-            _widgets.AddRange(sortedWidgets.Values);
+                new WallpaperWidget(), 
+                new DateTimeWidget(), 
+                new MouseWidget(), 
+                new CPUWidget(), 
+                new GPUWidget()
+            });
 
             foreach (var widget in _widgets)
             {
-                widget.Initialize(this);
+                widget.Setup(this);
+                widget.Initialize();
             }
         }
 

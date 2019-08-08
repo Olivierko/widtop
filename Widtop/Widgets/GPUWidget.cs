@@ -27,9 +27,9 @@ namespace Widtop.Widgets
         private float? _load;
         private float? _temperature;
 
-        public override void Initialize(IWidgetService service)
+        public override void Initialize()
         {
-            _pc = service.Get<Computer>();
+            _pc = Service.Get<Computer>();
             _pc.GPUEnabled = true;
         }
 

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using HidSharp;
 using HidSharp.Reports;
+using HidSharp.Reports.Input;
 
 namespace Widtop.Hid
 {
@@ -39,6 +40,98 @@ namespace Widtop.Hid
             _log = log;
             _connections = new Dictionary<string, bool>();
             _processors = processors;
+        }
+
+        private void OnStreamClosed(object sender, EventArgs args)
+        {
+            var stream = (DeviceStream)sender;
+
+            // TODO: can be removed?
+            stream.Closed -= OnStreamClosed;
+            stream.InterruptRequested -= OnStreamInterruptRequested;
+
+            if (stream.Device == null)
+            {
+                return;
+            }
+
+            _log($"Stream closed for: {stream.Device.DevicePath}");
+            _connections[stream.Device.DevicePath] = false;
+        }
+
+        private void OnStreamInterruptRequested(object sender, EventArgs args)
+        {
+            var stream = (DeviceStream)sender;
+
+            if (stream.Device == null)
+            {
+                return;
+            }
+
+            _log($"Stream interrupt requested for: {stream.Device.DevicePath}");
+            _connections[stream.Device.DevicePath] = false;
+        }
+
+        private void OnReceiverStarted(object sender, EventArgs args)
+        {
+            var receiver = (HidDeviceInputReceiver)sender;
+
+            if (receiver.Stream?.Device == null)
+            {
+                return;
+            }
+
+            _log($"Receiver started for: {receiver.Stream.Device.DevicePath}");
+            _connections[receiver.Stream.Device.DevicePath] = true;
+        }
+
+        private void OnReceiverStopped(object sender, EventArgs args)
+        {
+            var receiver = (HidDeviceInputReceiver)sender;
+
+            if (receiver.Stream?.Device == null)
+            {
+                return;
+            }
+
+            _log($"Receiver stopped for: {receiver.Stream.Device.DevicePath}");
+            _connections[receiver.Stream.Device.DevicePath] = false;
+        }
+
+        private void OnReceiverReceived(object sender, EventArgs args)
+        {
+            var receiver = (HidDeviceInputReceiver)sender;
+
+            if (receiver.Stream?.Device == null)
+            {
+                return;
+            }
+
+            var length = receiver.Stream.Device.GetMaxInputReportLength();
+
+            var buffer = new byte[length];
+
+            if (receiver.TryRead(buffer, 0, out var report))
+            {
+                _log($"Report ID: {report.ReportID}, type: {report.ReportType}");
+
+                report.Read(buffer, 0, (bytes, offset, item, dataItem) =>
+                {
+                    LogBuffer(bytes);
+
+                    foreach (var feature in _processors)
+                    {
+                        if (feature.Process(buffer))
+                        {
+                            break;
+                        }
+                    }
+                });
+            }
+            else
+            {
+                _log("Failed to read report.");
+            }
         }
 
         private void SetupDevices()
@@ -116,58 +209,11 @@ namespace Widtop.Hid
 
             var receiver = descriptor.CreateHidDeviceInputReceiver();
 
-            stream.Closed += (sender, args) =>
-            {
-                _log($"Stream closed for: {device.DevicePath}");
-                _connections[device.DevicePath] = false;
-            };
-
-            stream.InterruptRequested += (sender, eventArgs) =>
-            {
-                _log($"Stream interrupt requested for: {device.DevicePath}");
-                _connections[device.DevicePath] = false;
-            };
-
-            receiver.Started += (sender, eventArgs) =>
-            {
-                _log($"Receiver started for: {device.DevicePath}");
-                _connections[device.DevicePath] = true;
-            };
-
-            receiver.Stopped += (sender, eventArgs) =>
-            {
-                _log($"Receiver stopped for: {device.DevicePath}");
-                _connections[device.DevicePath] = false;
-            };
-
-            receiver.Received += (sender, eventArgs) =>
-            {
-                var length = device.GetMaxInputReportLength();
-
-                var buffer = new byte[length];
-
-                if (receiver.TryRead(buffer, 0, out var report))
-                {
-                    _log($"Report ID: {report.ReportID}, type: {report.ReportType}");
-
-                    report.Read(buffer, 0, (bytes, offset, item, dataItem) =>
-                    {
-                        LogBuffer(bytes);
-
-                        foreach (var feature in _processors)
-                        {
-                            if (feature.Process(buffer))
-                            {
-                                break;
-                            }
-                        }
-                    });
-                }
-                else
-                {
-                    _log("Failed to read report.");
-                }
-            };
+            stream.Closed += OnStreamClosed;
+            stream.InterruptRequested += OnStreamInterruptRequested;
+            receiver.Started += OnReceiverStarted;
+            receiver.Stopped += OnReceiverStopped;
+            receiver.Received += OnReceiverReceived;
 
             receiver.Start(stream);
             return receiver.IsRunning;

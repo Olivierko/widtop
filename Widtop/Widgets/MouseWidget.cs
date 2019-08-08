@@ -57,7 +57,7 @@ namespace Widtop.Widgets
             _lightspeedConnector.Reset();
         }
 
-        public override void Initialize(IWidgetService service)
+        public override void Initialize()
         {
             var batteryProcessor = new BatteryReportProcessor(Log);
             batteryProcessor.BatteryUpdated += OnBatteryUpdated;

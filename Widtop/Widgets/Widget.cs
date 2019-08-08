@@ -4,7 +4,14 @@ namespace Widtop.Widgets
 {
     public abstract class Widget
     {
-        public virtual void Initialize(IWidgetService service) { }
+        protected IWidgetService Service;
+
+        internal void Setup(IWidgetService service)
+        {
+            Service = service;
+        }
+
+        public virtual void Initialize() { }
 
         public virtual void Update() { }
 
