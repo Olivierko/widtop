@@ -53,7 +53,7 @@ namespace Widtop.Widgets
                 var workArea = interop.GetMonitorRECT(devicePath);
 
                 // TODO: construct an image based on the position setting
-                //var position = interop.GetPosition();
+                var position = interop.GetPosition();
 
                 var rectangle = new Rectangle(
                     workArea.Left, 

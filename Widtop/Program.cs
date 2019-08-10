@@ -9,14 +9,16 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
-    // TODO: see over current update loop for widgets, eg: Open hardware monitor seems slow
+    // TODO: both loops should await any existing operation to complete? update loop stalls a lot due to slow reading of hardware values
     internal class Program
     {
         private const int Interval = 1000;
 
+        private static readonly Stopwatch UpdateStopWatch = new Stopwatch();
+        private static readonly Stopwatch RenderStopWatch = new Stopwatch();
+
         private static Rectangle _area;
         private static IntPtr _workerWindow;
-        private static Stopwatch _stopwatch = new Stopwatch();
         private static WidgetService _widgetService;
         private static BufferedGraphicsContext _bufferedGraphicsContext;
 
@@ -58,12 +60,16 @@ namespace Widtop
 
         private static void Update()
         {
+            Debug.WriteLine("Update() begin");
+            UpdateStopWatch.Restart();
             _widgetService.Update();
+            Debug.WriteLine($"Update() took: {UpdateStopWatch.ElapsedMilliseconds}ms");
         }
 
         private static void Render()
         {
-            _stopwatch.Restart();
+            Debug.WriteLine("Render() begin");
+            RenderStopWatch.Restart();
 
             if (_workerWindow == IntPtr.Zero && !DesktopHandler.TryGetWorkerWindow(out _workerWindow))
             {
@@ -82,7 +88,7 @@ namespace Widtop
             }
             
             Native.ReleaseDC(_workerWindow, deviceContext);
-            Debug.WriteLine($"Render() took: {_stopwatch.ElapsedMilliseconds}ms");
+            Debug.WriteLine($"Render() took: {RenderStopWatch.ElapsedMilliseconds}ms");
         }
     }
 }

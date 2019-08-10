@@ -31,20 +31,19 @@ namespace Widtop.Widgets
         {
             _pc = Service.Get<Computer>();
             _pc.GPUEnabled = true;
+
+            _pc.Open();
         }
 
         public override void Update()
         {
             lock (_pc)
             {
-                _pc.Open();
-
                 var gpu = _pc.Hardware.FirstOrDefault(x => x.HardwareType == HardwareType.GpuNvidia || x.HardwareType == HardwareType.GpuAti);
 
+                gpu?.Update();
                 _load = gpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Load && x.Name == GPUCoreKey)?.Value;
                 _temperature = gpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Temperature && x.Name == GPUCoreKey)?.Value;
-
-                _pc.Close();
             }
         }
 

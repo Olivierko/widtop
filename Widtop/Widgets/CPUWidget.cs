@@ -24,7 +24,6 @@ namespace Widtop.Widgets
         private static StringFormat ValueFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
         private Computer _pc;
-
         private float? _load;
         private float? _temperature;
 
@@ -32,20 +31,19 @@ namespace Widtop.Widgets
         {
             _pc = Service.Get<Computer>();
             _pc.CPUEnabled = true;
+
+            _pc.Open();
         }
 
         public override void Update()
         {
             lock (_pc)
             {
-                _pc.Open();
-
                 var cpu = _pc.Hardware.FirstOrDefault(x => x.HardwareType == HardwareType.CPU);
 
+                cpu?.Update();
                 _load = cpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Load && x.Name == CPULoadKey)?.Value;
                 _temperature = cpu?.Sensors.FirstOrDefault(x => x.SensorType == SensorType.Temperature && x.Name == CPUTemperatureKey)?.Value;
-
-                _pc.Close();
             }
         }
 
