@@ -1,6 +1,4 @@
-﻿// ReSharper disable InconsistentNaming
-// ReSharper disable IdentifierTypo
-// ReSharper disable NotAccessedField.Local
+﻿// ReSharper disable NotAccessedField.Local
 
 using System;
 using System.Collections.Generic;
@@ -14,9 +12,6 @@ namespace Widtop.Hid
 {
     public class Connector
     {
-        private const byte DeviceId = 0x01;
-        private const int ConnectionInterval = 1000;
-
         private readonly Device _device;
         private readonly Dictionary<string, bool> _connections;
 
@@ -254,13 +249,13 @@ namespace Widtop.Hid
                 state => EnsureConnection(), 
                 null, 
                 0,
-                ConnectionInterval
+                1000
             );
 
             _device.OnInitialize(this);
         }
 
-        public void IssueReport(ReportSize reportSize, params byte[] parameters)
+        public void IssueReport(params byte[] parameters)
         {
             var canIssueReport =
                 _hidDevice != null &&
@@ -278,10 +273,7 @@ namespace Widtop.Hid
                 var length = _hidDevice.GetMaxOutputReportLength();
 
                 var buffer = new byte[length];
-                buffer[0] = (byte)reportSize;
-                buffer[1] = DeviceId;
-
-                parameters.CopyTo(buffer, 2);
+                parameters.CopyTo(buffer, 0);
 
                 Log($"Issued report at: {DateTime.Now:HH:mm:ss} with ID: {buffer[0]}");
                 Log(buffer);

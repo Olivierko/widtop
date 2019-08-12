@@ -10,11 +10,11 @@ namespace Widtop.Logitech
 
         public override bool Process(byte[] buffer)
         {
-            var matchesFeature =
+            var matches =
                 buffer.Length >= 3 &&
                 buffer[2] == (byte)ReportType.Error;
 
-            if (!matchesFeature)
+            if (!matches)
             {
                 return false;
             }

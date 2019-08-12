@@ -16,12 +16,12 @@ namespace Widtop.Logitech
 
         public override bool Process(byte[] buffer)
         {
-            var matchesFeature =
+            var matches =
                 buffer.Length >= 8 &&
                 buffer[0] == (byte)ReportSize.Long &&
                 buffer[2] == (byte)ReportType.Battery;
 
-            if (!matchesFeature)
+            if (!matches)
             {
                 return false;
             }

@@ -7,10 +7,12 @@ namespace Widtop.Logitech
 {
     public abstract class LightspeedDevice : Device
     {
+        private const byte DeviceId = 0x01;
         private const string VirtualHardwareIdPattern = "mi_02&col01";
         private const string PhysicalHardwareIdPattern = "mi_02&col02";
 
         public override int VendorId => 0x046D;
+        public override int ReceiverId => 0xC539;
         public abstract Discharge[] DischargeCurve { get; }
 
         public decimal? Battery { get; set; }
@@ -40,7 +42,7 @@ namespace Widtop.Logitech
 
             // poll battery status once per minute starting after 3 seconds
             _batteryTimer = new Timer(
-                state => connector.IssueReport(ReportSize.Short, (byte)ReportType.Battery),
+                state => connector.IssueReport((byte)ReportSize.Short, DeviceId, (byte)ReportType.Battery),
                 null,
                 3000,
                 60000

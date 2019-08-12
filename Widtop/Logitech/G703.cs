@@ -4,7 +4,6 @@
     {
         public override string Name => "G703";
         public override int ProductId => 0xC090;
-        public override int ReceiverId => 0xC539;
 
         public override Discharge[] DischargeCurve => new[]
         {
