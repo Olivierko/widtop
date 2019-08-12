@@ -1,16 +1,12 @@
-﻿using System;
+﻿using Widtop.Hid;
 
-namespace Widtop.Hid
+namespace Widtop.Logitech
 {
     public class ErrorReportProcessor : ReportProcessor
     {
         public delegate void ErrorReceive();
 
         public event ErrorReceive ErrorReceived;
-
-        public ErrorReportProcessor(Action<string> log) : base(log)
-        {
-        }
 
         public override bool Process(byte[] buffer)
         {
@@ -22,8 +18,6 @@ namespace Widtop.Hid
             {
                 return false;
             }
-
-            Log($"Received a report with error status, buffer: {string.Join(" ", buffer)}");
 
             ErrorReceived?.Invoke();
 

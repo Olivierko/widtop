@@ -1,24 +1,12 @@
-﻿// ReSharper disable InconsistentNaming
-
-namespace Widtop.Hid
+﻿namespace Widtop.Logitech
 {
-    public static class DischargeCurve
+    public class G703 : LightspeedDevice
     {
-        public class Discharge
-        {
-            public int Minutes { get; }
-            public double Volts { get; }
-            public double mWh { get; }
+        public override string Name => "G703";
+        public override int ProductId => 0xC090;
+        public override int ReceiverId => 0xC539;
 
-            public Discharge(int minutes, double volts, double mwh)
-            {
-                Minutes = minutes;
-                Volts = volts;
-                mWh = mwh;
-            }
-        }
-
-        public static readonly Discharge[] Values =
+        public override Discharge[] DischargeCurve => new[]
         {
             new Discharge(0, 4.186, 1.34),
             new Discharge(1, 4.172, 2.73),
@@ -729,5 +717,4 @@ namespace Widtop.Hid
             new Discharge(706, 3.479, 904.34)
         };
     }
-
 }

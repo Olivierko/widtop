@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using Widtop.Hid;
+using Widtop.Logitech;
 
 namespace Widtop.Widgets
 {
-    // TODO: refactor LightspeedConnector to resolve mouse model itself and create instance per model with appropriate data for discharge, name etc
     public class MouseWidget : Widget
     {
         private const int BarHeight = 6;
-        private const string Name = "G703";
 
         private static Rectangle Area => new Rectangle(2560 + 240, 240 + 20, 400, 40);
         private static Font Font => new Font("Agency FB", 18);
@@ -21,15 +19,11 @@ namespace Widtop.Widgets
         private static StringFormat StatusFormat => new StringFormat{ LineAlignment = StringAlignment.Center, Alignment = StringAlignment.Center };
         private static StringFormat ValueFormat => new StringFormat{ LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
-        private decimal? _batteryPercentage;
-        private BatteryVoltageStatus? _status;
-        private LightspeedConnector _lightspeedConnector;
-
-        private static void Log(string message) { }
+        private LightspeedDevice _device;
 
         private string GetStatusString()
         {
-            switch (_status)
+            switch (_device.Status)
             {
                 case null:
                     return "?";
@@ -46,37 +40,12 @@ namespace Widtop.Widgets
             }
         }
 
-        private void OnBatteryUpdated(double volt, BatteryVoltageStatus status, double discharge, decimal percentage)
-        {
-            _status = status;
-            _batteryPercentage = percentage;
-        }
-
-        private void OnErrorReceived()
-        {
-            _lightspeedConnector.Reset();
-        }
-
         public override void Initialize()
         {
-            var batteryProcessor = new BatteryReportProcessor(Log);
-            batteryProcessor.BatteryUpdated += OnBatteryUpdated;
+            _device = new G703();
 
-            var errorProcessor = new ErrorReportProcessor(Log);
-            errorProcessor.ErrorReceived += OnErrorReceived;
-
-            var processors = new List<ReportProcessor>
-            {
-                batteryProcessor,
-                errorProcessor
-            };
-
-            _lightspeedConnector = new LightspeedConnector(
-                Log, 
-                processors
-            );
-
-            _lightspeedConnector.Initialize();
+            var connector = new Connector(_device);
+            connector.Initialize();
         }
 
         public override void Render(Graphics graphics)
@@ -84,7 +53,7 @@ namespace Widtop.Widgets
             var status = GetStatusString();
             
             graphics.DrawString(
-                Name, 
+                _device.Name, 
                 Font, 
                 TextBrush,
                 Area, 
@@ -100,7 +69,7 @@ namespace Widtop.Widgets
             );
 
             graphics.DrawString(
-                $"{_batteryPercentage ?? -1:0}%", 
+                $"{_device.Battery ?? -1:0}%", 
                 Font, 
                 TextBrush,
                 Area, 
@@ -119,7 +88,7 @@ namespace Widtop.Widgets
                 BarForegroundBrush,
                 Area.Left,
                 Area.Bottom - BarHeight, 
-                (int)(Area.Width / 100 * _batteryPercentage ?? 0),
+                (int)(Area.Width / 100 * _device.Battery ?? 0),
                 BarHeight
             );
         }

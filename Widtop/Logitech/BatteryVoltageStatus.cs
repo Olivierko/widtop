@@ -1,6 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
-namespace Widtop.Hid
+namespace Widtop.Logitech
 {
     public enum BatteryVoltageStatus : byte
     {

@@ -5,6 +5,7 @@ using Widtop.Utility;
 
 namespace Widtop.Widgets
 {
+    // TODO: construct an image based on the position setting
     public class WallpaperWidget : Widget
     {
         private class Wallpaper
@@ -52,7 +53,6 @@ namespace Widtop.Widgets
 
                 var workArea = interop.GetMonitorRECT(devicePath);
 
-                // TODO: construct an image based on the position setting
                 var position = interop.GetPosition();
 
                 var rectangle = new Rectangle(

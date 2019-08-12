@@ -46,7 +46,7 @@ namespace Widtop.Widgets
             );
 
             graphics.DrawString(
-                $"{now:dddd}{Environment.NewLine}{now.Day}{daySuffix} {now:MMMM}", 
+                $"{now.Day}{daySuffix} {now:MMMM}{Environment.NewLine}{now:dddd}", 
                 SecondaryFont, 
                 SecondaryBrush,
                 Area, 

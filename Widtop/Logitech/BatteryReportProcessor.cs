@@ -1,15 +1,17 @@
-﻿using System;
+﻿using Widtop.Hid;
 
-namespace Widtop.Hid
+namespace Widtop.Logitech
 {
     public class BatteryReportProcessor : ReportProcessor
     {
         public delegate void BatteryUpdate(double volt, BatteryVoltageStatus status, double discharge, decimal percentage);
 
+        private readonly LightspeedDevice _device;
         public event BatteryUpdate BatteryUpdated;
 
-        public BatteryReportProcessor(Action<string> log) : base(log)
+        public BatteryReportProcessor(LightspeedDevice device)
         {
+            _device = device;
         }
 
         public override bool Process(byte[] buffer)
@@ -29,10 +31,10 @@ namespace Widtop.Hid
 
             var volt = milliVolt / 1000d;
 
-            DischargeCurve.Discharge matchingCurve = null;
-            for (var index = 0; index < DischargeCurve.Values.Length; index++)
+            Discharge matchingCurve = null;
+            for (var index = 0; index < _device.DischargeCurve.Length; index++)
             {
-                var curve = DischargeCurve.Values[index];
+                var curve = _device.DischargeCurve[index];
 
                 if (curve.Volts <= volt)
                 {
@@ -43,20 +45,12 @@ namespace Widtop.Hid
 
             if (matchingCurve == null)
             {
-                Log($"Failed to resolve discharge curve for voltage: {volt}, falling back to lowest.");
-                matchingCurve = DischargeCurve.Values[DischargeCurve.Values.Length - 1];
+                // fallback to last curve when no match
+                matchingCurve = _device.DischargeCurve[_device.DischargeCurve.Length - 1];
             }
 
-            var maxMinutes = DischargeCurve.Values[DischargeCurve.Values.Length - 1].Minutes;
+            var maxMinutes = _device.DischargeCurve[_device.DischargeCurve.Length - 1].Minutes;
             var percentage = 100m - decimal.Divide(matchingCurve.Minutes, maxMinutes) * 100;
-
-            Log("#########################");
-            Log("Battery report received:");
-            Log($"Battery voltage: {volt}");
-            Log($"Battery status: {status}");
-            Log($"Battery discharge: {matchingCurve.mWh} mWh");
-            Log($"Percentage: ~{percentage}% (based on minutes)");
-            Log("#########################");
 
             BatteryUpdated?.Invoke(
                 volt, 
@@ -68,5 +62,4 @@ namespace Widtop.Hid
             return true;
         }
     }
-
 }

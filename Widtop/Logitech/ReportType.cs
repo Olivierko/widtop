@@ -1,4 +1,4 @@
-﻿namespace Widtop.Hid
+﻿namespace Widtop.Logitech
 {
     public enum ReportType : byte
     {

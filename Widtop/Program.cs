@@ -45,7 +45,7 @@ namespace Widtop
             _widgetService.Initialize();
 
             _bufferedGraphicsContext = new BufferedGraphicsContext();
-
+            
             DesktopHandler.Initialize();
             DesktopHandler.Invalidate();
 
@@ -85,8 +85,9 @@ namespace Widtop
             {
                 _widgetService.Render(bufferedGraphics.Graphics);
                 bufferedGraphics.Render(deviceContext);
+                _bufferedGraphicsContext.Invalidate();
             }
-            
+
             Native.ReleaseDC(_workerWindow, deviceContext);
             Debug.WriteLine($"Render() took: {RenderStopWatch.ElapsedMilliseconds}ms");
         }
