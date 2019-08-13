@@ -13,10 +13,11 @@ namespace Widtop.Logitech
 
         public override int VendorId => 0x046D;
         public override int ReceiverId => 0xC539;
+
         public abstract Discharge[] DischargeCurve { get; }
 
-        public decimal? Battery { get; set; }
-        public BatteryVoltageStatus? Status { get; set; }
+        public decimal? Battery { get; private set; }
+        public BatteryVoltageStatus? Status { get; private set; }
 
         private Timer _batteryTimer;
 

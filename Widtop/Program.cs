@@ -1,6 +1,4 @@
-﻿// ReSharper disable InconsistentlySynchronizedField
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
@@ -9,7 +7,6 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
-    // TODO: both loops should await any existing operation to complete? update loop stalls a lot due to slow reading of hardware values
     internal class Program
     {
         private const int Interval = 1000;

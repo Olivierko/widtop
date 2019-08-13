@@ -28,7 +28,10 @@ namespace Widtop.Hid
             _connections = new Dictionary<string, bool>();
         }
 
-        private static void Log(string message) { }
+        private static void Log(string message)
+        {
+            System.Diagnostics.Debug.WriteLine(message);
+        }
 
         private static void Log(byte[] buffer)
         {
@@ -124,12 +127,11 @@ namespace Widtop.Hid
 
             if (receiver.TryRead(buffer, 0, out var report))
             {
-                Log($"Report ID: {report.ReportID}, type: {report.ReportType}");
+                Log($"Received report with id: {report.ReportID}, type: {report.ReportType}");
 
                 report.Read(buffer, 0, (bytes, offset, item, dataItem) =>
                 {
                     Log(bytes);
-
                     _device.OnReportReceived(buffer);
                 });
             }
@@ -141,23 +143,23 @@ namespace Widtop.Hid
 
         private void SetupDevices()
         {
-            var virtualReceiverDevice = DeviceList.Local
+            var virtualWirelessDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ReceiverId)
                 .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
 
-            var virtualDevice = DeviceList.Local
+            var virtualWiredDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ProductId)
                 .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
 
-            if (SetupDevice(virtualReceiverDevice, out _hidStream))
+            if (SetupDevice(virtualWirelessDevice, out _hidStream))
             {
-                _hidDevice = virtualReceiverDevice;
-                Virtual = virtualReceiverDevice?.DevicePath;
+                _hidDevice = virtualWirelessDevice;
+                Virtual = virtualWirelessDevice?.DevicePath;
             }
-            else if (SetupDevice(virtualDevice, out _hidStream))
+            else if (SetupDevice(virtualWiredDevice, out _hidStream))
             {
-                _hidDevice = virtualDevice;
-                Virtual = virtualDevice?.DevicePath;
+                _hidDevice = virtualWiredDevice;
+                Virtual = virtualWiredDevice?.DevicePath;
             }
             else
             {
@@ -165,21 +167,21 @@ namespace Widtop.Hid
                 Virtual = null;
             }
 
-            var physicalReceiverDevice = DeviceList.Local
+            var physicalWirelessDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ReceiverId)
                 .FirstOrDefault(x => _device.MatchesPhysical(x.DevicePath));
 
-            var physicalDevice = DeviceList.Local
+            var physicalWiredDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ProductId)
                 .FirstOrDefault(x => _device.MatchesPhysical(x.DevicePath));
 
-            if (SetupDevice(physicalReceiverDevice, out _))
+            if (SetupDevice(physicalWirelessDevice, out _))
             {
-                Physical = physicalReceiverDevice?.DevicePath;
+                Physical = physicalWirelessDevice?.DevicePath;
             }
-            else if (SetupDevice(physicalDevice, out _))
+            else if (SetupDevice(physicalWiredDevice, out _))
             {
-                Physical = physicalDevice?.DevicePath;
+                Physical = physicalWiredDevice?.DevicePath;
             }
             else
             {
@@ -275,7 +277,7 @@ namespace Widtop.Hid
                 var buffer = new byte[length];
                 parameters.CopyTo(buffer, 0);
 
-                Log($"Issued report at: {DateTime.Now:HH:mm:ss} with ID: {buffer[0]}");
+                Log("Issued report:");
                 Log(buffer);
 
                 _hidStream.Write(buffer);

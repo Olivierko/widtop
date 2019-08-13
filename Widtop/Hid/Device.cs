@@ -11,17 +11,6 @@
 
         public virtual void OnInitialize(Connector connector) { }
 
-        public virtual void OnReportReceived(byte[] buffer)
-        {
-            foreach (var processor in Processors)
-            {
-                if (processor.Process(buffer))
-                {
-                    break;
-                }
-            }
-        }
-
         public virtual bool MatchesVirtual(string devicePath)
         {
             return true;
@@ -30,6 +19,17 @@
         public virtual bool MatchesPhysical(string devicePath)
         {
             return true;
+        }
+
+        public void OnReportReceived(byte[] buffer)
+        {
+            foreach (var processor in Processors)
+            {
+                if (processor.Process(buffer))
+                {
+                    break;
+                }
+            }
         }
     }
 }
