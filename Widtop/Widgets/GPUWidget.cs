@@ -6,6 +6,7 @@ using OpenHardwareMonitor.Hardware;
 
 namespace Widtop.Widgets
 {
+    // TODO: only sample once per second
     public class GPUWidget : Widget
     {
         private const int BarHeight = 6;

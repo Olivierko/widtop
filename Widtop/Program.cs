@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using Widtop.Utility;
 using Widtop.Widgets;
@@ -52,6 +53,8 @@ namespace Widtop
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);
 
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
             new ManualResetEvent(false).WaitOne();
         }
 
@@ -87,6 +90,37 @@ namespace Widtop
 
             Native.ReleaseDC(_workerWindow, deviceContext);
             Debug.WriteLine($"Render() took: {RenderStopWatch.ElapsedMilliseconds}ms");
+        }
+
+        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine(e.ExceptionObject.ToString());
+
+            try
+            {
+                var fileStream = new FileStream(
+                    "./log.txt",
+                    FileMode.OpenOrCreate,
+                    FileAccess.Write
+                );
+
+                var writer = new StreamWriter(fileStream);
+
+                using (fileStream)
+                {
+                    using (writer)
+                    {
+                        writer.WriteLine($"Unhandled exception occured: {DateTime.Now:HH:mm:ss}");
+                        writer.WriteLine(e.ExceptionObject.ToString());
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
+
+            Environment.Exit(1);
         }
     }
 }
