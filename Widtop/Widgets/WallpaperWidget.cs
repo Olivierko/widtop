@@ -76,13 +76,16 @@ namespace Widtop.Widgets
         {
             foreach (var wallpaper in _wallpapers)
             {
-                if (wallpaper.Image != null)
+                lock (wallpaper)
                 {
-                    graphics.DrawImageUnscaled(wallpaper.Image, new Point(wallpaper.Area.X, wallpaper.Area.Y));
-                }
-                else
-                {
-                    graphics.FillRectangle(_backgroundBrush, wallpaper.Area);
+                    if (wallpaper.Image != null)
+                    {
+                        graphics.DrawImageUnscaled(wallpaper.Image, new Point(wallpaper.Area.X, wallpaper.Area.Y));
+                    }
+                    else
+                    {
+                        graphics.FillRectangle(_backgroundBrush, wallpaper.Area);
+                    }
                 }
             }
         }

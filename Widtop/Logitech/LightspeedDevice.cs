@@ -1,7 +1,7 @@
 ﻿// ReSharper disable NotAccessedField.Local
 
-using System.Threading;
 using Widtop.Hid;
+using Widtop.Utility;
 
 namespace Widtop.Logitech
 {
@@ -19,7 +19,7 @@ namespace Widtop.Logitech
         public decimal? Battery { get; private set; }
         public BatteryVoltageStatus? Status { get; private set; }
 
-        private Timer _batteryTimer;
+        private QueuedTimer _batteryTimer;
 
         private void OnBatteryUpdated(double volt, BatteryVoltageStatus status, double discharge, decimal percentage)
         {
@@ -42,9 +42,8 @@ namespace Widtop.Logitech
             };
 
             // poll battery status once per minute starting after 3 seconds
-            _batteryTimer = new Timer(
+            _batteryTimer = new QueuedTimer(
                 state => connector.IssueReport((byte)ReportSize.Short, DeviceId, (byte)ReportType.Battery),
-                null,
                 3000,
                 60000
             );

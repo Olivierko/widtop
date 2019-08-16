@@ -47,8 +47,8 @@ namespace Widtop
             DesktopHandler.Initialize();
             DesktopHandler.Invalidate();
 
-            var updateTimer = new Timer(x => Update(), null, 0, Interval);
-            var renderTimer = new Timer(x => Render(), null, 0, Interval);
+            var updateTimer = new QueuedTimer(x => Update(), Interval);
+            var renderTimer = new QueuedTimer(x => Render(), Interval);
 
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);
@@ -60,7 +60,6 @@ namespace Widtop
 
         private static void Update()
         {
-            Debug.WriteLine("Update() begin");
             UpdateStopWatch.Restart();
             _widgetService.Update();
             Debug.WriteLine($"Update() took: {UpdateStopWatch.ElapsedMilliseconds}ms");
@@ -68,7 +67,6 @@ namespace Widtop
 
         private static void Render()
         {
-            Debug.WriteLine("Render() begin");
             RenderStopWatch.Restart();
 
             if (_workerWindow == IntPtr.Zero && !DesktopHandler.TryGetWorkerWindow(out _workerWindow))
@@ -99,7 +97,7 @@ namespace Widtop
             try
             {
                 var fileStream = new FileStream(
-                    "./log.txt",
+                    "./widtop_log.txt",
                     FileMode.OpenOrCreate,
                     FileAccess.Write
                 );

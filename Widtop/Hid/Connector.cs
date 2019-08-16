@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using HidSharp;
 using HidSharp.Reports;
 using HidSharp.Reports.Input;
+using Widtop.Utility;
 
 namespace Widtop.Hid
 {
@@ -17,7 +17,7 @@ namespace Widtop.Hid
 
         private HidDevice _hidDevice;
         private HidStream _hidStream;
-        private Timer _connectionTimer;
+        private QueuedTimer _connectionTimer;
 
         private string Virtual { get; set; }
         private string Physical { get; set; }
@@ -247,10 +247,8 @@ namespace Widtop.Hid
         public void Initialize()
         {
             // poll connections once per second starting immediately
-            _connectionTimer = new Timer(
+            _connectionTimer = new QueuedTimer(
                 state => EnsureConnection(), 
-                null, 
-                0,
                 1000
             );
 
