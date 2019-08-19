@@ -11,6 +11,8 @@
 
         public virtual void OnInitialize(Connector connector) { }
 
+        public virtual void OnConnected() { }
+
         public virtual bool MatchesVirtual(string devicePath)
         {
             return true;

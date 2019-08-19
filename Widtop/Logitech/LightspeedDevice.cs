@@ -49,6 +49,11 @@ namespace Widtop.Logitech
             );
         }
 
+        public override void OnConnected()
+        {
+            _batteryTimer?.Trigger();
+        }
+
         public override bool MatchesVirtual(string devicePath)
         {
             return devicePath.Contains(VirtualHardwareIdPattern);

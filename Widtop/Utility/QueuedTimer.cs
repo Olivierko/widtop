@@ -43,6 +43,16 @@ namespace Widtop.Utility
             }
         }
 
+        public void Trigger()
+        {
+            _timer.Change(0, _interval);
+        }
+
+        public void Stop()
+        {
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
         public void Dispose()
         {
             _timer.Dispose();

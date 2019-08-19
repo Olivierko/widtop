@@ -1,7 +1,6 @@
 ﻿// ReSharper disable NotAccessedField.Local
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using HidSharp;
 using HidSharp.Reports;
@@ -13,19 +12,28 @@ namespace Widtop.Hid
     public class Connector
     {
         private readonly Device _device;
-        private readonly Dictionary<string, bool> _connections;
 
-        private HidDevice _hidDevice;
-        private HidStream _hidStream;
+        private HidDevice _virtualDevice;
+        private HidDevice _physicalDevice;
+        private HidStream _virtualStream;
+        private HidStream _physicalStream;
+        private HidDeviceInputReceiver _virtualReceiver;
+        private HidDeviceInputReceiver _physicalReceiver;
         private QueuedTimer _connectionTimer;
 
-        private string Virtual { get; set; }
-        private string Physical { get; set; }
+        public bool IsConnected =>
+            _virtualDevice != null &&
+            _virtualReceiver != null &&
+            _virtualReceiver.IsRunning &&
+            _virtualStream != null &&
+            _physicalDevice != null &&
+            _physicalReceiver != null &&
+            _physicalReceiver.IsRunning &&
+            _physicalStream != null;
 
         public Connector(Device device)
         {
             _device = device;
-            _connections = new Dictionary<string, bool>();
         }
 
         private static void Log(string message)
@@ -57,59 +65,23 @@ namespace Widtop.Hid
             Log(hex);
         }
 
-        private void OnStreamClosed(object sender, EventArgs args)
+        private void OnDeviceListChanged(object sender, DeviceListChangedEventArgs e)
         {
-            var stream = (DeviceStream)sender;
+            var allDevices = DeviceList.Local.GetHidDevices().ToList();
 
-            stream.Closed -= OnStreamClosed;
-            stream.InterruptRequested -= OnStreamInterruptRequested;
+            var requireReset = 
+                _virtualDevice != null && 
+                allDevices.Contains(_virtualDevice) ||
+                _physicalDevice != null && 
+                !allDevices.Contains(_physicalDevice);
 
-            if (stream.Device == null)
+            if (!requireReset)
             {
                 return;
             }
 
-            Log($"Stream closed for: {stream.Device.DevicePath}");
-            _connections[stream.Device.DevicePath] = false;
-        }
-
-        private void OnStreamInterruptRequested(object sender, EventArgs args)
-        {
-            var stream = (DeviceStream)sender;
-
-            if (stream.Device == null)
-            {
-                return;
-            }
-
-            Log($"Stream interrupt requested for: {stream.Device.DevicePath}");
-            _connections[stream.Device.DevicePath] = false;
-        }
-
-        private void OnReceiverStarted(object sender, EventArgs args)
-        {
-            var receiver = (HidDeviceInputReceiver)sender;
-
-            if (receiver.Stream?.Device == null)
-            {
-                return;
-            }
-
-            Log($"Receiver started for: {receiver.Stream.Device.DevicePath}");
-            _connections[receiver.Stream.Device.DevicePath] = true;
-        }
-
-        private void OnReceiverStopped(object sender, EventArgs args)
-        {
-            var receiver = (HidDeviceInputReceiver)sender;
-
-            if (receiver.Stream?.Device == null)
-            {
-                return;
-            }
-
-            Log($"Receiver stopped for: {receiver.Stream.Device.DevicePath}");
-            _connections[receiver.Stream.Device.DevicePath] = false;
+            Log("Device was disconnected.");
+            Reset();
         }
 
         private void OnReceiverReceived(object sender, EventArgs args)
@@ -143,56 +115,67 @@ namespace Widtop.Hid
 
         private void SetupDevices()
         {
-            var virtualWirelessDevice = DeviceList.Local
-                .GetHidDevices(_device.VendorId, _device.ReceiverId)
-                .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
-
             var virtualWiredDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ProductId)
                 .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
 
-            if (SetupDevice(virtualWirelessDevice, out _hidStream))
+            var virtualWirelessDevice = DeviceList.Local
+                .GetHidDevices(_device.VendorId, _device.ReceiverId)
+                .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
+
+            if (SetupDevice(virtualWiredDevice, out _virtualStream, out _virtualReceiver))
             {
-                _hidDevice = virtualWirelessDevice;
-                Virtual = virtualWirelessDevice?.DevicePath;
+                _virtualDevice = virtualWiredDevice;
             }
-            else if (SetupDevice(virtualWiredDevice, out _hidStream))
+            else if (SetupDevice(virtualWirelessDevice, out _virtualStream, out _virtualReceiver))
             {
-                _hidDevice = virtualWiredDevice;
-                Virtual = virtualWiredDevice?.DevicePath;
+                _virtualDevice = virtualWirelessDevice;
             }
             else
             {
+                Reset();
                 Log("Failed connecting to virtual device.");
-                Virtual = null;
+                return;
             }
-
-            var physicalWirelessDevice = DeviceList.Local
-                .GetHidDevices(_device.VendorId, _device.ReceiverId)
-                .FirstOrDefault(x => _device.MatchesPhysical(x.DevicePath));
 
             var physicalWiredDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ProductId)
                 .FirstOrDefault(x => _device.MatchesPhysical(x.DevicePath));
 
-            if (SetupDevice(physicalWirelessDevice, out _))
+            var physicalWirelessDevice = DeviceList.Local
+                .GetHidDevices(_device.VendorId, _device.ReceiverId)
+                .FirstOrDefault(x => _device.MatchesPhysical(x.DevicePath));
+
+            if (SetupDevice(physicalWiredDevice, out _physicalStream, out _physicalReceiver))
             {
-                Physical = physicalWirelessDevice?.DevicePath;
+                _physicalDevice = physicalWiredDevice;
             }
-            else if (SetupDevice(physicalWiredDevice, out _))
+            else if (SetupDevice(physicalWirelessDevice, out _physicalStream, out _physicalReceiver))
             {
-                Physical = physicalWiredDevice?.DevicePath;
+                _physicalDevice = physicalWirelessDevice;
             }
             else
             {
+                Reset();
                 Log("Failed connecting to physical device.");
-                Physical = null;
+                return;
+            }
+
+            if (IsConnected)
+            {
+                Log("Successfully connected to device.");
+                _device.OnConnected();
+            }
+            else
+            {
+                Log("Failed connecting to device.");
             }
         }
 
-        private bool SetupDevice(HidDevice device, out HidStream stream)
+        private bool SetupDevice(HidDevice device, out HidStream stream, out HidDeviceInputReceiver receiver)
         {
             stream = null;
+            receiver = null;
             if (device == null)
             {
                 return false;
@@ -214,12 +197,7 @@ namespace Widtop.Hid
                 return false;
             }
 
-            var receiver = descriptor.CreateHidDeviceInputReceiver();
-
-            stream.Closed += OnStreamClosed;
-            stream.InterruptRequested += OnStreamInterruptRequested;
-            receiver.Started += OnReceiverStarted;
-            receiver.Stopped += OnReceiverStopped;
+            receiver = descriptor.CreateHidDeviceInputReceiver();
             receiver.Received += OnReceiverReceived;
 
             receiver.Start(stream);
@@ -228,15 +206,7 @@ namespace Widtop.Hid
 
         private void EnsureConnection()
         {
-            var connected =
-                !string.IsNullOrEmpty(Virtual) &&
-                !string.IsNullOrEmpty(Physical) &&
-                _connections.ContainsKey(Virtual) &&
-                _connections.ContainsKey(Physical) &&
-                _connections[Virtual] &&
-                _connections[Physical];
-
-            if (connected)
+            if (IsConnected)
             {
                 return;
             }
@@ -253,24 +223,20 @@ namespace Widtop.Hid
             );
 
             _device.OnInitialize(this);
+
+            DeviceList.Local.Changed += OnDeviceListChanged;
         }
 
         public void IssueReport(params byte[] parameters)
         {
-            var canIssueReport =
-                _hidDevice != null &&
-                _hidStream != null &&
-                _connections.ContainsKey(_hidDevice.DevicePath) &&
-                _connections[_hidDevice.DevicePath];
-
-            if (!canIssueReport)
+            if (!IsConnected)
             {
                 return;
             }
 
             try
             {
-                var length = _hidDevice.GetMaxOutputReportLength();
+                var length = _virtualDevice.GetMaxOutputReportLength();
 
                 var buffer = new byte[length];
                 parameters.CopyTo(buffer, 0);
@@ -278,7 +244,7 @@ namespace Widtop.Hid
                 Log("Issued report:");
                 Log(buffer);
 
-                _hidStream.Write(buffer);
+                _virtualStream.Write(buffer);
             }
             catch (Exception e)
             {
@@ -288,9 +254,12 @@ namespace Widtop.Hid
 
         public void Reset()
         {
-            Virtual = null;
-            Physical = null;
-            _connections.Clear();
+            _virtualDevice = null;
+            _virtualStream = null;
+            _virtualReceiver = null;
+            _physicalDevice = null;
+            _physicalStream = null;
+            _physicalReceiver = null;
         }
     }
 }
