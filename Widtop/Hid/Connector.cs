@@ -3,7 +3,6 @@
 using System;
 using System.Linq;
 using HidSharp;
-using HidSharp.Reports;
 using HidSharp.Reports.Input;
 using Widtop.Utility;
 
@@ -13,6 +12,7 @@ namespace Widtop.Hid
     {
         private readonly Device _device;
 
+        private bool _initialized;
         private HidDevice _virtualDevice;
         private HidDevice _physicalDevice;
         private HidStream _virtualStream;
@@ -41,37 +41,13 @@ namespace Widtop.Hid
             System.Diagnostics.Debug.WriteLine(message);
         }
 
-        private static void Log(byte[] buffer)
-        {
-            Log("Raw:");
-            Log(string.Join(" ", buffer));
-
-            var bits = string.Empty;
-            foreach (var @byte in buffer)
-            {
-                bits += Convert.ToString(@byte, 2) + " ";
-            }
-
-            Log("Bits: ");
-            Log(bits);
-
-            var hex = string.Empty;
-            foreach (var @byte in buffer)
-            {
-                hex += $"0x{@byte:X} ";
-            }
-
-            Log("Hex: ");
-            Log(hex);
-        }
-
         private void OnDeviceListChanged(object sender, DeviceListChangedEventArgs e)
         {
             var allDevices = DeviceList.Local.GetHidDevices().ToList();
 
             var requireReset = 
                 _virtualDevice != null && 
-                allDevices.Contains(_virtualDevice) ||
+                !allDevices.Contains(_virtualDevice) ||
                 _physicalDevice != null && 
                 !allDevices.Contains(_physicalDevice);
 
@@ -86,35 +62,44 @@ namespace Widtop.Hid
 
         private void OnReceiverReceived(object sender, EventArgs args)
         {
-            var receiver = (HidDeviceInputReceiver)sender;
-
-            if (receiver.Stream?.Device == null)
+            try
             {
-                return;
-            }
+                var receiver = (HidDeviceInputReceiver)sender;
 
-            var length = receiver.Stream.Device.GetMaxInputReportLength();
-
-            var buffer = new byte[length];
-
-            if (receiver.TryRead(buffer, 0, out var report))
-            {
-                Log($"Received report with id: {report.ReportID}, type: {report.ReportType}");
-
-                report.Read(buffer, 0, (bytes, offset, item, dataItem) =>
+                if (receiver.Stream?.Device == null)
                 {
-                    Log(bytes);
-                    _device.OnReportReceived(buffer);
-                });
+                    return;
+                }
+
+                var length = receiver.Stream.Device.GetMaxInputReportLength();
+
+                var buffer = new byte[length];
+
+                if (receiver.TryRead(buffer, 0, out var report))
+                {
+                    Log($"Received report with id: {report.ReportID}, type: {report.ReportType}");
+
+                    report.Read(buffer, 0, (bytes, offset, item, dataItem) =>
+                    {
+                        Log(string.Join(" ", bytes));
+                        _device.OnReportReceived(buffer);
+                    });
+                }
+                else
+                {
+                    Log("Failed to read report.");
+                }
             }
-            else
+            catch (Exception e)
             {
-                Log("Failed to read report.");
+                Log($"Exception while reading report occured: {e}");
             }
         }
 
         private void SetupDevices()
         {
+            Reset();
+
             var virtualWiredDevice = DeviceList.Local
                 .GetHidDevices(_device.VendorId, _device.ProductId)
                 .FirstOrDefault(x => _device.MatchesVirtual(x.DevicePath));
@@ -169,6 +154,7 @@ namespace Widtop.Hid
             else
             {
                 Log("Failed connecting to device.");
+                Reset();
             }
         }
 
@@ -181,15 +167,17 @@ namespace Widtop.Hid
                 return false;
             }
 
-            if (!device.TryOpen(out stream))
-            {
-                return false;
-            }
-
-            ReportDescriptor descriptor;
             try
             {
-                descriptor = device.GetReportDescriptor();
+                if (!device.TryOpen(out stream))
+                {
+                    return false;
+                }
+
+                var descriptor = device.GetReportDescriptor();
+                receiver = descriptor.CreateHidDeviceInputReceiver();
+                receiver.Received += OnReceiverReceived;
+                receiver.Start(stream);
             }
             catch (Exception e)
             {
@@ -197,10 +185,6 @@ namespace Widtop.Hid
                 return false;
             }
 
-            receiver = descriptor.CreateHidDeviceInputReceiver();
-            receiver.Received += OnReceiverReceived;
-
-            receiver.Start(stream);
             return receiver.IsRunning;
         }
 
@@ -216,6 +200,11 @@ namespace Widtop.Hid
 
         public void Initialize()
         {
+            if (_initialized)
+            {
+                throw new Exception("Initialize has already been invoked.");
+            }
+
             // poll connections once per second starting immediately
             _connectionTimer = new QueuedTimer(
                 state => EnsureConnection(), 
@@ -225,6 +214,8 @@ namespace Widtop.Hid
             _device.OnInitialize(this);
 
             DeviceList.Local.Changed += OnDeviceListChanged;
+
+            _initialized = true;
         }
 
         public void IssueReport(params byte[] parameters)
@@ -242,7 +233,7 @@ namespace Widtop.Hid
                 parameters.CopyTo(buffer, 0);
 
                 Log("Issued report:");
-                Log(buffer);
+                Log(string.Join(" ", buffer));
 
                 _virtualStream.Write(buffer);
             }
@@ -254,6 +245,19 @@ namespace Widtop.Hid
 
         public void Reset()
         {
+            _virtualStream?.Dispose();
+            _physicalStream?.Dispose();
+
+            if (_virtualReceiver != null)
+            {
+                _virtualReceiver.Received -= OnReceiverReceived;
+            }
+
+            if (_physicalReceiver != null)
+            {
+                _physicalReceiver.Received -= OnReceiverReceived;
+            }
+
             _virtualDevice = null;
             _virtualStream = null;
             _virtualReceiver = null;

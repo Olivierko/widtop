@@ -29,9 +29,6 @@ namespace Widtop.Utility
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool ReleaseDC(IntPtr hWnd, IntPtr hDc);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool SystemParametersInfo(SPI uiAction, uint uiParam, string pvParam, SPIF fWinIni);
-
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
 
@@ -86,23 +83,6 @@ namespace Widtop.Utility
             SMTO_BLOCK = 0x1,
             SMTO_ABORTIFHUNG = 0x2,
             SMTO_NOTIMEOUTIFNOTHUNG = 0x8
-        }
-
-        [Flags]
-        public enum SPIF : uint
-        {
-            NONE = 0x00,
-            SPIF_UPDATEINIFILE = 0x01,
-            SPIF_SENDCHANGE = 0x02,
-            SPIF_SENDWININICHANGE = 0x02
-        }
-
-        [Flags]
-        public enum SPI : uint
-        {
-            NONE = 0x00,
-            SPI_SETDESKWALLPAPER = 0x0014,
-            SPI_GETDESKWALLPAPER = 0x0073
         }
     }
 }

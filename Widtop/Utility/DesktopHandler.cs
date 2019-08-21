@@ -2,7 +2,6 @@
 // ReSharper disable InconsistentNaming
 
 using System;
-using Microsoft.Win32;
 
 namespace Widtop.Utility
 {
@@ -11,9 +10,6 @@ namespace Widtop.Utility
         private const string PROGRAM_MANAGER = "Progman";
         private const string WORKER_WINDOW = "WorkerW";
         private const string SHELLDLL_WINDOW = "SHELLDLL_DefView";
-        private const string CONTROL_PANEL = "Control Panel";
-        private const string DESKTOP = "Desktop";
-        private const string WALLPAPER = "Wallpaper";
         private const uint SPAWN_WORKER = 0x052C;
 
         public static void Initialize()
@@ -21,20 +17,6 @@ namespace Widtop.Utility
             var window = Native.FindWindow(PROGRAM_MANAGER, null);
             Native.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)0);
             Native.SendMessage(window, SPAWN_WORKER, (IntPtr)0x0000000D, (IntPtr)1);
-        }
-
-        public static void Invalidate()
-        {
-            var currentMachine = Registry.CurrentUser;
-            var controlPanel = currentMachine.OpenSubKey(CONTROL_PANEL);
-            var desktop = controlPanel?.OpenSubKey(DESKTOP);
-
-            Native.SystemParametersInfo(
-                Native.SPI.SPI_SETDESKWALLPAPER,
-                0,
-                Convert.ToString(desktop?.GetValue(WALLPAPER)),
-                Native.SPIF.SPIF_UPDATEINIFILE
-            );
         }
 
         public static bool TryGetWorkerWindow(out IntPtr workerWindow)

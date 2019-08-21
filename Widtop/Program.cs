@@ -8,6 +8,7 @@ using Widtop.Widgets;
 
 namespace Widtop
 {
+    // TODO: figure out how to invalidate a device context / window instead of clearing on invalidate(), RedrawWindow in user32 didn't work
     internal class Program
     {
         private const int Interval = 1000;
@@ -45,7 +46,6 @@ namespace Widtop
             _bufferedGraphicsContext = new BufferedGraphicsContext();
             
             DesktopHandler.Initialize();
-            DesktopHandler.Invalidate();
 
             var updateTimer = new QueuedTimer(x => Update(), Interval);
             var renderTimer = new QueuedTimer(x => Render(), Interval);
@@ -56,6 +56,26 @@ namespace Widtop
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
             new ManualResetEvent(false).WaitOne();
+        }
+
+        private static void Invalidate()
+        {
+            if (_workerWindow == IntPtr.Zero && !DesktopHandler.TryGetWorkerWindow(out _workerWindow))
+            {
+                return;
+            }
+
+            if (!DesktopHandler.TryGetDeviceContext(_workerWindow, out var deviceContext))
+            {
+                return;
+            }
+
+            var graphics = Graphics.FromHdc(deviceContext);
+
+            using (graphics)
+            { 
+                graphics.Clear(Color.Teal);
+            }
         }
 
         private static void Update()
@@ -112,6 +132,8 @@ namespace Widtop
                         writer.WriteLine(e.ExceptionObject.ToString());
                     }
                 }
+
+                Invalidate();
             }
             catch
             {
