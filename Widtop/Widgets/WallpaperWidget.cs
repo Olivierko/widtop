@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using Widtop.Utility;
 
 namespace Widtop.Widgets
@@ -32,62 +34,119 @@ namespace Widtop.Widgets
             return Color.FromArgb(r, g, b);
         }
 
-        public override void Initialize()
+        private static Wallpaper CreateWallpaper(COM.Rect workArea, COM.DesktopWallpaperPosition position, string path)
         {
-            _wallpapers = new List<Wallpaper>();
+            Rectangle rectangle;
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            var interop = (COM.IDesktopWallpaper) new COM.DesktopWallpaper();
+            var x = workArea.Left;
+            var y = workArea.Top;
+            var width = workArea.Right - workArea.Left;
+            var height = workArea.Bottom - workArea.Top;
 
-            var colorHex = interop.GetBackgroundColor();
-            var backgroundColor = ToColor(colorHex);
-            _backgroundBrush = new SolidBrush(backgroundColor);
+            var image = !string.IsNullOrEmpty(path) && File.Exists(path)
+                ? Image.FromFile(path)
+                : null;
 
-            var monitorCount = interop.GetMonitorDevicePathCount();
+            // TODO: temporary override
+            position = COM.DesktopWallpaperPosition.Fill;
 
-            for (uint monitorIndex = 0; monitorIndex < monitorCount; monitorIndex++)
+            switch (position)
             {
-                var devicePath = interop.GetMonitorDevicePathAt(monitorIndex);
-
-                var path = interop.GetWallpaper(devicePath);
-
-                var workArea = interop.GetMonitorRECT(devicePath);
-
-                var position = interop.GetPosition();
-
-                var rectangle = new Rectangle(
-                    workArea.Left, 
-                    workArea.Top, 
-                    workArea.Right - workArea.Left, 
-                    workArea.Bottom - workArea.Top
-                );
-
-                var image = !string.IsNullOrEmpty(path) && File.Exists(path) 
-                    ? Image.FromFile(path) 
-                    : null;
-
-                var wallpaper = new Wallpaper(rectangle, image);
-
-                _wallpapers.Add(wallpaper);
+                case COM.DesktopWallpaperPosition.Center:
+                    rectangle = new Rectangle(
+                        x + (int)(width * 0.5f) - (int)(image?.Width ?? 0 * 0.5f),
+                        y + (int)(height * 0.5f) - (int)(image?.Height ?? 0 * 0.5f),
+                        image?.Width ?? 0,
+                        image?.Height ?? 0
+                    );
+                    break;
+                case COM.DesktopWallpaperPosition.Fill:
+                    rectangle = new Rectangle(
+                        x,
+                        y,
+                        width,
+                        height
+                    );
+                    break;
+                case COM.DesktopWallpaperPosition.Tile:
+                case COM.DesktopWallpaperPosition.Stretch:
+                case COM.DesktopWallpaperPosition.Fit:
+                case COM.DesktopWallpaperPosition.Span:
+                    throw new NotImplementedException();
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
+            var wallpaper = new Wallpaper(
+                rectangle, 
+                image
+            );
+
+            return wallpaper;
         }
 
-        public override void Render(Graphics graphics)
+        public override async Task Initialize()
         {
-            foreach (var wallpaper in _wallpapers)
+            await Task.Run(() =>
             {
-                lock (wallpaper)
+                _wallpapers = new List<Wallpaper>();
+
+                // ReSharper disable once SuspiciousTypeConversion.Global
+                var interop = (COM.IDesktopWallpaper)new COM.DesktopWallpaper();
+
+                var colorHex = interop.GetBackgroundColor();
+                var backgroundColor = ToColor(colorHex);
+                _backgroundBrush = new SolidBrush(backgroundColor);
+
+                var monitorCount = interop.GetMonitorDevicePathCount();
+
+                for (uint monitorIndex = 0; monitorIndex < monitorCount; monitorIndex++)
                 {
-                    if (wallpaper.Image != null)
+                    var devicePath = interop.GetMonitorDevicePathAt(monitorIndex);
+
+                    var path = interop.GetWallpaper(devicePath);
+
+                    var workArea = interop.GetMonitorRECT(devicePath);
+
+                    var position = interop.GetPosition();
+
+                    #region HACK
+                    if (monitorIndex == 0)
                     {
-                        graphics.DrawImageUnscaled(wallpaper.Image, new Point(wallpaper.Area.X, wallpaper.Area.Y));
+                        workArea.Top = 215;
                     }
-                    else
+                    else if (monitorIndex == 1)
                     {
-                        graphics.FillRectangle(_backgroundBrush, wallpaper.Area);
+                        workArea.Top = 0;
+                    }
+                    #endregion
+
+                    var wallpaper = CreateWallpaper(workArea, position, path);
+
+                    _wallpapers.Add(wallpaper);
+                }
+            });
+        }
+
+        public override async Task Render(Graphics graphics)
+        {
+            await Task.Run(() =>
+            {
+                foreach (var wallpaper in _wallpapers)
+                {
+                    lock (wallpaper)
+                    {
+                        if (wallpaper.Image != null)
+                        {
+                            graphics.DrawImageUnscaled(wallpaper.Image, new Point(wallpaper.Area.X, wallpaper.Area.Y));
+                        }
+                        else
+                        {
+                            graphics.FillRectangle(_backgroundBrush, wallpaper.Area);
+                        }
                     }
                 }
-            }
+            });
         }
     }
 }

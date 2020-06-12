@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Threading.Tasks;
 
 namespace Widtop.Widgets
 {
@@ -11,10 +12,19 @@ namespace Widtop.Widgets
             Service = service;
         }
 
-        public virtual void Initialize() { }
+        public virtual async Task Initialize()
+        {
+            await Task.CompletedTask;
+        }
 
-        public virtual void Update() { }
+        public virtual async Task Update()
+        {
+            await Task.CompletedTask;
+        }
 
-        public virtual void Render(Graphics graphics) { }
+        public virtual async Task Render(Graphics graphics)
+        {
+            await Task.CompletedTask;
+        }
     }
 }

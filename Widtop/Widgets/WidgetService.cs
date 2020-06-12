@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 
 namespace Widtop.Widgets
 {
@@ -27,7 +28,7 @@ namespace Widtop.Widgets
             return (T)_objects[type];
         }
 
-        public void Initialize()
+        public async Task Initialize()
         {
             _widgets.AddRange(new Widget[]
             {
@@ -35,29 +36,30 @@ namespace Widtop.Widgets
                 new DateTimeWidget(), 
                 new MouseWidget(), 
                 new CPUWidget(), 
-                new GPUWidget()
+                new GPUWidget(),
+                new YeelightWidget()
             });
 
             foreach (var widget in _widgets)
             {
                 widget.Setup(this);
-                widget.Initialize();
+                await widget.Initialize();
             }
         }
 
-        public void Update()
+        public async Task Update()
         {
             foreach (var widget in _widgets)
             {
-                widget.Update();
+                await widget.Update();
             }
         }
         
-        public void Render(Graphics graphics)
+        public async Task Render(Graphics graphics)
         {
             foreach (var widget in _widgets)
             {
-                widget.Render(graphics);
+                await widget.Render(graphics);
             }
         }
     }

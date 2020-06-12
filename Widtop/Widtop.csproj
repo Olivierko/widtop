@@ -7,11 +7,13 @@
     <RepositoryType>git</RepositoryType>
     <ApplicationIcon>widtop.ico</ApplicationIcon>
     <ApplicationManifest>widtop.manifest</ApplicationManifest>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="HidSharp" Version="2.1.0" />
     <PackageReference Include="OpenHardwareMonitor" Version="0.7.1" />
+    <PackageReference Include="YeelightAPI" Version="1.7.0" />
   </ItemGroup>
 
   <ItemGroup>

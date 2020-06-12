@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 
 namespace Widtop.Widgets
 {
     public class DateTimeWidget : Widget
     {
-        private static Rectangle Area => new Rectangle(2560, 240, 222, 200);
+        private static Rectangle Area => new Rectangle(2560, 40, 222, 200);
         private static Font PrimaryFont => new Font("Agency FB", 72);
         private static Font SecondaryFont => new Font("Agency FB", 30);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
@@ -32,26 +33,29 @@ namespace Widtop.Widgets
             }
         }
 
-        public override void Render(Graphics graphics)
+        public override async Task Render(Graphics graphics)
         {
-            var now = DateTime.Now;
-            var daySuffix = GetDaySuffix(now.Day);
+            await Task.Run(() =>
+            {
+                var now = DateTime.Now;
+                var daySuffix = GetDaySuffix(now.Day);
 
-            graphics.DrawString(
-                $"{now:HH:mm}", 
-                PrimaryFont, 
-                PrimaryBrush,
-                Area, 
-                PrimaryFormat
-            );
+                graphics.DrawString(
+                    $"{now:HH:mm}",
+                    PrimaryFont,
+                    PrimaryBrush,
+                    Area,
+                    PrimaryFormat
+                );
 
-            graphics.DrawString(
-                $"{now.Day}{daySuffix} {now:MMMM}{Environment.NewLine}{now:dddd}", 
-                SecondaryFont, 
-                SecondaryBrush,
-                Area, 
-                SecondaryFormat
-            );
+                graphics.DrawString(
+                    $"{now.Day}{daySuffix} {now:MMMM}{Environment.NewLine}{now:dddd}",
+                    SecondaryFont,
+                    SecondaryBrush,
+                    Area,
+                    SecondaryFormat
+                );
+            });
         }
     }
 }

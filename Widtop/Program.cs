@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Widtop.Utility;
 using Widtop.Widgets;
 
@@ -11,7 +12,8 @@ namespace Widtop
     // TODO: figure out how to invalidate a device context / window instead of clearing on invalidate(), RedrawWindow in user32 didn't work
     internal class Program
     {
-        private const int Interval = 1000;
+        private const int UpdateInterval = 100;
+        private const int RenderInterval = 1000;
 
         private static readonly Stopwatch UpdateStopWatch = new Stopwatch();
         private static readonly Stopwatch RenderStopWatch = new Stopwatch();
@@ -21,7 +23,7 @@ namespace Widtop
         private static WidgetService _widgetService;
         private static BufferedGraphicsContext _bufferedGraphicsContext;
 
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             var displays = DisplayHandler.GetAll();
 
@@ -41,14 +43,14 @@ namespace Widtop
             );
 
             _widgetService = new WidgetService();
-            _widgetService.Initialize();
+            await _widgetService.Initialize();
 
             _bufferedGraphicsContext = new BufferedGraphicsContext();
             
             DesktopHandler.Initialize();
 
-            var updateTimer = new QueuedTimer(x => Update(), Interval);
-            var renderTimer = new QueuedTimer(x => Render(), Interval);
+            var updateTimer = new QueuedTimer(async x => await Update(), UpdateInterval);
+            var renderTimer = new QueuedTimer(async x => await Render(), RenderInterval);
 
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);
@@ -78,14 +80,14 @@ namespace Widtop
             }
         }
 
-        private static void Update()
+        private static async Task Update()
         {
             UpdateStopWatch.Restart();
-            _widgetService.Update();
+            await _widgetService.Update();
             Debug.WriteLine($"Update() took: {UpdateStopWatch.ElapsedMilliseconds}ms");
         }
 
-        private static void Render()
+        private static async Task Render()
         {
             RenderStopWatch.Restart();
 
@@ -101,7 +103,7 @@ namespace Widtop
 
             using (var bufferedGraphics = _bufferedGraphicsContext.Allocate(deviceContext, _area))
             {
-                _widgetService.Render(bufferedGraphics.Graphics);
+                await _widgetService.Render(bufferedGraphics.Graphics);
                 bufferedGraphics.Render(deviceContext);
                 _bufferedGraphicsContext.Invalidate();
             }
