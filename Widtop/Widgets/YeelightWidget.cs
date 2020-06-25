@@ -12,13 +12,21 @@ namespace Widtop.Widgets
 {
     public class YeelightWidget : Widget
     {
+        private const int TimerInterval = 60000;
+        private const int LightSmooth = 10000;
+
         private static Rectangle Area => new Rectangle(2560, 0, 1080, 200);
         private static Font PrimaryFont => new Font("Agency FB", 12);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
         private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
+        private static readonly TimeSpan TimerStart = new TimeSpan(20, 0, 0);
+        private static readonly TimeSpan TimerEnd = new TimeSpan(6, 0, 0);
+
         private readonly StringBuilder _stringBuilder;
         private readonly List<Device> _connectedDevices;
+
+        private QueuedTimer _lightsTimer;
 
         public YeelightWidget()
         {
@@ -68,6 +76,22 @@ namespace Widtop.Widgets
             }
         }
 
+        private async Task OnLightsTimer()
+        {
+            if (DateTime.Now.TimeOfDay < TimerStart && DateTime.Now.TimeOfDay > TimerEnd)
+            {
+                return;
+            }
+
+            foreach (var device in _connectedDevices)
+            {
+                await device.SetPower(true, LightSmooth);
+            }
+
+            // only run timer action once
+            _lightsTimer.Stop();
+        }
+
         public override async Task Initialize()
         {
             DeviceLocator.OnDeviceFound += OnDeviceFound;
@@ -75,6 +99,8 @@ namespace Widtop.Widgets
 
             var keyboard = Service.Get<Keyboard>();
             keyboard.KeyPress += OnKeyPress;
+
+            _lightsTimer = new QueuedTimer(async x => await OnLightsTimer(), TimerInterval);
         }
 
         public override async Task Update()
