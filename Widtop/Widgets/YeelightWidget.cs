@@ -103,5 +103,20 @@ namespace Widtop.Widgets
                 );
             });
         }
+
+        public override async Task OnShutdown()
+        {
+            foreach (var device in _connectedDevices)
+            {
+                try
+                {
+                    await device.TurnOff();
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+        }
     }
 }

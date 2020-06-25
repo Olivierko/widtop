@@ -26,5 +26,10 @@ namespace Widtop.Widgets
         {
             await Task.CompletedTask;
         }
+
+        public virtual async Task OnShutdown()
+        {
+            await Task.CompletedTask;
+        }
     }
 }

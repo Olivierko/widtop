@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using Widtop.Utility;
 using Widtop.Widgets;
 
@@ -55,7 +56,9 @@ namespace Widtop
             GC.KeepAlive(updateTimer);
             GC.KeepAlive(renderTimer);
 
+            AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            SystemEvents.SessionEnded += OnSessionEnded;
 
             new ManualResetEvent(false).WaitOne();
         }
@@ -112,7 +115,14 @@ namespace Widtop
             Debug.WriteLine($"Render() took: {RenderStopWatch.ElapsedMilliseconds}ms");
         }
 
-        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private static void OnProcessExit(object sender, EventArgs e)
+        {
+            AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
+            AppDomain.CurrentDomain.UnhandledException -= OnUnhandledException;
+            SystemEvents.SessionEnded -= OnSessionEnded;
+        }
+
+        private static async void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Console.WriteLine(e.ExceptionObject.ToString());
 
@@ -130,8 +140,8 @@ namespace Widtop
                 {
                     using (writer)
                     {
-                        writer.WriteLine($"Unhandled exception occured: {DateTime.Now:HH:mm:ss}");
-                        writer.WriteLine(e.ExceptionObject.ToString());
+                        await writer.WriteLineAsync($"Unhandled exception occured: {DateTime.Now:HH:mm:ss}");
+                        await writer.WriteLineAsync(e.ExceptionObject.ToString());
                     }
                 }
 
@@ -143,6 +153,16 @@ namespace Widtop
             }
 
             Environment.Exit(1);
+        }
+
+        private static async void OnSessionEnded(object s, SessionEndedEventArgs e)
+        {
+            if (e.Reason != SessionEndReasons.SystemShutdown)
+            {
+                return;
+            }
+
+            await _widgetService.OnShutdown();
         }
     }
 }

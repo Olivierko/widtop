@@ -62,5 +62,13 @@ namespace Widtop.Widgets
                 await widget.Render(graphics);
             }
         }
+
+        public async Task OnShutdown()
+        {
+            foreach (var widget in _widgets)
+            {
+                await widget.OnShutdown();
+            }
+        }
     }
 }
