@@ -140,7 +140,7 @@ namespace Widtop
                 {
                     using (writer)
                     {
-                        await writer.WriteLineAsync($"Unhandled exception occured: {DateTime.Now:HH:mm:ss}");
+                        await writer.WriteLineAsync($"Unhandled exception occured: {DateTime.Now:yyyy/MMMM/dd HH:mm:ss}");
                         await writer.WriteLineAsync(e.ExceptionObject.ToString());
                     }
                 }

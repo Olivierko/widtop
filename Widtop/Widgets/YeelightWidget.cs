@@ -72,7 +72,6 @@ namespace Widtop.Widgets
             catch (Exception e)
             {
                 Debug.WriteLine($"Failed to toggle device power: {e.Message}");
-
             }
         }
 
@@ -85,7 +84,14 @@ namespace Widtop.Widgets
 
             foreach (var device in _connectedDevices)
             {
-                await device.SetPower(true, LightSmooth);
+                try
+                {
+                    await device.SetPower(true, LightSmooth);
+                }
+                catch
+                {
+                    // ignored
+                }
             }
 
             // only run timer action once
@@ -105,12 +111,17 @@ namespace Widtop.Widgets
 
         public override async Task Update()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
                 _stringBuilder.Clear();
 
                 foreach (var device in _connectedDevices)
                 {
+                    if (!device.IsConnected)
+                    {
+                        await device.Connect();
+                    }
+
                     _stringBuilder.AppendLine($"{device.Model} - {device.Properties["power"]}");
                 }
             });
