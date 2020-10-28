@@ -20,9 +20,6 @@ namespace Widtop.Widgets
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
         private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
-        private static readonly TimeSpan TimerStart = new TimeSpan(20, 0, 0);
-        private static readonly TimeSpan TimerEnd = new TimeSpan(6, 0, 0);
-
         private readonly StringBuilder _stringBuilder;
         private readonly List<Device> _connectedDevices;
 
@@ -51,7 +48,7 @@ namespace Widtop.Widgets
         {
             switch (key)
             {
-                case Keys.F12:
+                case Keys.F24:
                     foreach (var device in _connectedDevices)
                     {
                         ToggleDevicePower(device);
@@ -60,14 +57,35 @@ namespace Widtop.Widgets
             }
         }
 
-        private static void ToggleDevicePower(IDeviceController device)
+        private static async Task EnsureDeviceConnection(Device device)
+        {
+            if (device.IsConnected)
+            {
+                return;
+            }
+
+            try
+            {
+                var connected = await device.Connect();
+
+                Debug.WriteLine($"Attempted to connect to device: {device.Name}:{connected}");
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine($"Failed to connect to device: {e.Message}");
+            }
+        }
+
+        private static void ToggleDevicePower(Device device)
         {
             try
             {
-                var task = device.Toggle();
-                var power = task.GetAwaiter().GetResult();
+                EnsureDeviceConnection(device).GetAwaiter().GetResult();
 
-                Debug.WriteLine($"Power toggled: {power}");
+                var toggle = device.Toggle();
+                var power = toggle.GetAwaiter().GetResult();
+
+                Debug.WriteLine($"Power toggled for device: {device.Name}:{power}");
             }
             catch (Exception e)
             {
@@ -77,7 +95,15 @@ namespace Widtop.Widgets
 
         private async Task OnLightsTimer()
         {
-            if (DateTime.Now.TimeOfDay < TimerStart && DateTime.Now.TimeOfDay > TimerEnd)
+            var sunrise = await Service.Get<Solar>().GetSunrise();
+            var sunset = await Service.Get<Solar>().GetSunset();
+
+            if (!sunrise.HasValue || !sunset.HasValue)
+            {
+                return;
+            }
+
+            if (DateTime.UtcNow.TimeOfDay < sunset && DateTime.UtcNow.TimeOfDay > sunrise)
             {
                 return;
             }
@@ -86,6 +112,7 @@ namespace Widtop.Widgets
             {
                 try
                 {
+                    await EnsureDeviceConnection(device);
                     await device.SetPower(true, LightSmooth);
                 }
                 catch
@@ -111,20 +138,14 @@ namespace Widtop.Widgets
 
         public override async Task Update()
         {
-            await Task.Run(async () =>
+            _stringBuilder.Clear();
+
+            foreach (var device in _connectedDevices)
             {
-                _stringBuilder.Clear();
+                await EnsureDeviceConnection(device);
 
-                foreach (var device in _connectedDevices)
-                {
-                    if (!device.IsConnected)
-                    {
-                        await device.Connect();
-                    }
-
-                    _stringBuilder.AppendLine($"{device.Model} - {device.Properties["power"]}");
-                }
-            });
+                _stringBuilder.AppendLine($"{device.Model} - {device.Properties["power"]}");
+            }
         }
 
         public override async Task Render(Graphics graphics)
@@ -147,6 +168,7 @@ namespace Widtop.Widgets
             {
                 try
                 {
+                    await EnsureDeviceConnection(device);
                     await device.TurnOff();
                 }
                 catch
