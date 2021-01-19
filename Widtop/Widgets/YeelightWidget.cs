@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Text;
 using System.Threading.Tasks;
 using Widtop.Utility;
 using YeelightAPI;
@@ -20,14 +19,14 @@ namespace Widtop.Widgets
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
         private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
 
-        private readonly StringBuilder _stringBuilder;
+        private readonly ThreadSafeStringBuilder _stringBuilder;
         private readonly List<Device> _connectedDevices;
 
         private QueuedTimer _lightsTimer;
 
         public YeelightWidget()
         {
-            _stringBuilder = new StringBuilder();
+            _stringBuilder = new ThreadSafeStringBuilder();
             _connectedDevices = new List<Device>();
         }
 
