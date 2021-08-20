@@ -113,11 +113,13 @@ namespace Widtop.Widgets
                     #region HACK
                     if (monitorIndex == 0)
                     {
-                        workArea.Top = 215;
+                        workArea.Left = 1080;
+                        workArea.Top = 294;
                     }
                     else if (monitorIndex == 1)
                     {
                         workArea.Top = 0;
+                        workArea.Left = 0;
                     }
                     #endregion
 

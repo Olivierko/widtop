@@ -14,7 +14,7 @@ namespace Widtop.Widgets
         private const int TimerInterval = 60000;
         private const int LightSmooth = 10000;
 
-        private static Rectangle Area => new Rectangle(2560, 0, 1080, 200);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X, 0, 1080, 200);
         private static Font PrimaryFont => new Font("Agency FB", 12);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
         private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };

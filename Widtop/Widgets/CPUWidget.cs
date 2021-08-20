@@ -15,7 +15,7 @@ namespace Widtop.Widgets
         private const string CPULoadKey = "CPU Total";
         private const string CPUTemperatureKey = "CPU Package";
 
-        private static Rectangle Area => new Rectangle(2560 + 240, 40 + 80, 400, 40);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X + 240, WidgetConstants.Y + 80, 400, 40);
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush TextBrush => new SolidBrush(Color.White);
         private static SolidBrush StatusBrush => new SolidBrush(Color.FromArgb(121, 121, 121));

@@ -6,7 +6,7 @@ namespace Widtop.Widgets
 {
     public class DateTimeWidget : Widget
     {
-        private static Rectangle Area => new Rectangle(2560, 40, 222, 200);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X, WidgetConstants.Y, 222, 200);
         private static Font PrimaryFont => new Font("Agency FB", 72);
         private static Font SecondaryFont => new Font("Agency FB", 30);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
