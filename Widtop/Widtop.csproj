@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="HidSharp" Version="2.1.0" />
     <PackageReference Include="OpenHardwareMonitor" Version="0.7.1" />
-    <PackageReference Include="restsharp" Version="106.11.7" />
+    <PackageReference Include="restsharp" Version="106.12.0" />
     <PackageReference Include="YeelightAPI" Version="1.7.0" />
   </ItemGroup>
 
