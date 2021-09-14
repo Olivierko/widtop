@@ -38,8 +38,11 @@ namespace Widtop.Utility
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, EnumMonitorsProc lpfnEnum, IntPtr dwData);
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         public static extern short GetAsyncKeyState(int vKey);
+
+        [DllImport("user32.dll")]
+        public static extern short GetKeyState(int vKey);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
         public struct MonitorInfoEx

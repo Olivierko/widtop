@@ -6,13 +6,13 @@ namespace Widtop.Widgets
 {
     public class DateTimeWidget : Widget
     {
-        private static Rectangle Area => new Rectangle(WidgetConstants.X, WidgetConstants.Y, 222, 200);
-        private static Font PrimaryFont => new Font("Agency FB", 72);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X + 40, WidgetConstants.Y + 40, 1000, 260);
+        private static Font PrimaryFont => new Font("Agency FB", 100);
         private static Font SecondaryFont => new Font("Agency FB", 30);
         private static SolidBrush PrimaryBrush => new SolidBrush(Color.White);
         private static SolidBrush SecondaryBrush => new SolidBrush(Color.DimGray);
-        private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Far };
-        private static StringFormat SecondaryFormat => new StringFormat { LineAlignment = StringAlignment.Far, Alignment = StringAlignment.Far };
+        private static StringFormat PrimaryFormat => new StringFormat { LineAlignment = StringAlignment.Near, Alignment = StringAlignment.Center };
+        private static StringFormat SecondaryFormat => new StringFormat { LineAlignment = StringAlignment.Far, Alignment = StringAlignment.Center };
 
         private static string GetDaySuffix(int day)
         {
@@ -49,7 +49,7 @@ namespace Widtop.Widgets
                 );
 
                 graphics.DrawString(
-                    $"{now.Day}{daySuffix} {now:MMMM}{Environment.NewLine}{now:dddd}",
+                    $"{now:dddd}{Environment.NewLine}{now.Day}{daySuffix} {now:MMMM}",
                     SecondaryFont,
                     SecondaryBrush,
                     Area,

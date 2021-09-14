@@ -10,7 +10,7 @@ namespace Widtop.Widgets
     {
         private const int BarHeight = 6;
 
-        private static Rectangle Area => new Rectangle(WidgetConstants.X + 240, WidgetConstants.Y + 20, 400, 40);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X + 40, WidgetConstants.Y + 320, 1000, 40);
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush TextBrush => new SolidBrush(Color.White);
         private static SolidBrush StatusBrush => new SolidBrush(Color.FromArgb(121, 121, 121));

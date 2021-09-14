@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Threading.Tasks;
 
 namespace Widtop.Widgets
@@ -17,7 +18,7 @@ namespace Widtop.Widgets
             await Task.CompletedTask;
         }
 
-        public virtual async Task Update()
+        public virtual async Task Update(TimeSpan elapsed)
         {
             await Task.CompletedTask;
         }

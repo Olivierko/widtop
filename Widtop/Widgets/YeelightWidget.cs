@@ -369,7 +369,7 @@ namespace Widtop.Widgets
             _connectionTimer = new QueuedTimer(async x => await DeviceLocator.Discover(), TimerInterval, TimerInterval);
         }
 
-        public override async Task Update()
+        public override async Task Update(TimeSpan elapsed)
         {
             _stringBuilder.Clear();
             _stringBuilder.AppendLine(_pendingRequest 

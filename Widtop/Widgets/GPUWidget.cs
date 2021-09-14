@@ -1,5 +1,6 @@
 ﻿// ReSharper disable InconsistentNaming
 
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Widtop.Widgets
         private const string Name = "GPU";
         private const string GPUCoreKey = "GPU Core";
 
-        private static Rectangle Area => new Rectangle(WidgetConstants.X + 240, WidgetConstants.Y + 140, 400, 40);
+        private static Rectangle Area => new Rectangle(WidgetConstants.X + 40, WidgetConstants.Y + 440, 1000, 40);
         private static Font Font => new Font("Agency FB", 18);
         private static SolidBrush TextBrush => new SolidBrush(Color.White);
         private static SolidBrush StatusBrush => new SolidBrush(Color.FromArgb(121, 121, 121));
@@ -43,7 +44,7 @@ namespace Widtop.Widgets
             });
         }
 
-        public override async Task Update()
+        public override async Task Update(TimeSpan elapsed)
         {
             await Task.Run(() =>
             {

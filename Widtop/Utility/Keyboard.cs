@@ -4,9 +4,6 @@ namespace Widtop.Utility
 {
     public class Keyboard
     {
-        private const short UP = 1;
-        private const short DOWN = -32767;
-
         public delegate void KeyboardKeyPressCallback(Keys key);
         public event KeyboardKeyPressCallback KeyPress;
 
@@ -16,18 +13,48 @@ namespace Widtop.Utility
             GC.KeepAlive(timer);
         }
 
+        private static KeyState Resolve(short value)
+        {
+            var isToggled = (value & (1 << 0)) != 0;
+            var isPressed = (value & (1 << 7)) != 0;
+
+            var state = KeyState.None;
+
+            if (isToggled)
+            {
+                state |= KeyState.Toggled;
+            }
+
+            if (isPressed)
+            {
+                state |= KeyState.Down;
+            }
+
+            return state;
+        }
+
         private void Callback()
         {
             for (var i = 0; i < 255; i++)
             {
-                int key = Native.GetAsyncKeyState(i);
+                var key = Native.GetAsyncKeyState(i);
 
-                if (key == UP || key == DOWN)
+                var state = Resolve(key);
+
+                if (state.HasFlag(KeyState.Down) || state.HasFlag(KeyState.Toggled))
                 {
                     KeyPress?.Invoke((Keys)i);
                     break;
                 }
             }
+        }
+
+        public bool IsDown(Keys key)
+        {
+            var value = Native.GetKeyState((int)key);
+            var state = Resolve(value);
+
+            return state.HasFlag(KeyState.Down);
         }
     }
 }

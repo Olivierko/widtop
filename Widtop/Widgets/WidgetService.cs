@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 
@@ -7,11 +8,13 @@ namespace Widtop.Widgets
 {
     public class WidgetService : IWidgetService
     {
+        private readonly Stopwatch _watch;
         private readonly List<Widget> _widgets;
         private readonly Dictionary<Type, object> _objects;
 
         public WidgetService()
         {
+            _watch = new Stopwatch();
             _widgets = new List<Widget>();
             _objects = new Dictionary<Type, object>();
         }
@@ -37,7 +40,8 @@ namespace Widtop.Widgets
                 new MouseWidget(), 
                 new CPUWidget(), 
                 new GPUWidget(),
-                new YeelightWidget()
+                new YeelightWidget(),
+                new DeskWidget()
             });
 
             foreach (var widget in _widgets)
@@ -49,9 +53,12 @@ namespace Widtop.Widgets
 
         public async Task Update()
         {
+            var elapsed = _watch.Elapsed;
+            _watch.Restart();
+
             foreach (var widget in _widgets)
             {
-                await widget.Update();
+                await widget.Update(elapsed);
             }
         }
         
