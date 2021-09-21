@@ -241,30 +241,44 @@ namespace Widtop.Widgets
             _pendingRequest = false;
         }
 
-        private static async Task EnsureDeviceConnection(Device device)
+        private static async Task<bool> EnsureDeviceConnection(Device device)
         {
+            if (device == null)
+            {
+                return false;
+            }
+
             if (device.IsConnected)
             {
-                return;
+                return true;
             }
+
+            var connected = false;
 
             try
             {
-                var connected = await device.Connect();
+                connected = await device.Connect();
                 Debug.WriteLine($"Attempted to connect to device: {device.Name}:{connected}");
             }
             catch (Exception e)
             {
                 Debug.WriteLine($"Failed to connect to device: {e.Message}");
             }
+
+            return connected;
         }
 
         private static async Task SetDeviceBrightness(Device device, int value, int? smooth = null)
         {
             try
             {
-                await EnsureDeviceConnection(device);
-                var operation = await device.SetBrightness(value, smooth);
+                var connected = await EnsureDeviceConnection(device);
+
+                var operation = false;
+                if (connected)
+                {
+                    operation = await device.SetBrightness(value, smooth);
+                }
                 
                 Debug.WriteLine(operation
                     ? $"Brightness set to {value} for device: {device.Name}"
@@ -281,8 +295,13 @@ namespace Widtop.Widgets
         {
             try
             {
-                await EnsureDeviceConnection(device);
-                var operation = await device.SetColorTemperature(value, smooth);
+                var connected = await EnsureDeviceConnection(device);
+
+                var operation = false;
+                if (connected)
+                {
+                    operation = await device.SetColorTemperature(value, smooth);
+                }
 
                 Debug.WriteLine(operation
                     ? $"Color temperature set to {value} for device: {device.Name}"
@@ -299,8 +318,13 @@ namespace Widtop.Widgets
         {
             try
             {
-                await EnsureDeviceConnection(device);
-                var operation = await device.SetPower(state, smooth, mode);
+                var connected = await EnsureDeviceConnection(device);
+
+                var operation = false;
+                if (connected)
+                {
+                    operation = await device.SetPower(state, smooth, mode);
+                }
 
                 Debug.WriteLine(operation
                     ? $"Power set to {state} for device: {device.Name}, mode: {mode}"
@@ -317,8 +341,13 @@ namespace Widtop.Widgets
         {
             try
             {
-                await EnsureDeviceConnection(device);
-                var operation = await device.BackgroundSetPower(value);
+                var connected = await EnsureDeviceConnection(device);
+
+                var operation = false;
+                if (connected)
+                {
+                    operation = await device.BackgroundSetPower(value);
+                }
 
                 Debug.WriteLine(operation
                     ? $"Background power set to {value} for device: {device.Name}"
@@ -357,6 +386,15 @@ namespace Widtop.Widgets
             _sunlightTimer.Stop();
         }
 
+        private async Task OnConnectionTimer()
+        {
+            // clear all 'dead' devices
+            _connectedDevices.RemoveAll(y => y == null);
+
+            // forcefully discover new devices
+            await DeviceLocator.Discover();
+        }
+
         public override async Task Initialize()
         {
             DeviceLocator.OnDeviceFound += OnDeviceFound;
@@ -366,7 +404,7 @@ namespace Widtop.Widgets
             keyboard.KeyPress += OnKeyPress;
 
             _sunlightTimer = new QueuedTimer(async x => await OnSunlightTimer(), TimerInterval);
-            _connectionTimer = new QueuedTimer(async x => await DeviceLocator.Discover(), TimerInterval, TimerInterval);
+            _connectionTimer = new QueuedTimer(async x => await OnConnectionTimer(), TimerInterval, TimerInterval);
         }
 
         public override async Task Update(TimeSpan elapsed)
@@ -379,8 +417,12 @@ namespace Widtop.Widgets
 
             foreach (var device in _connectedDevices)
             {
-                await EnsureDeviceConnection(device);
-                _stringBuilder.AppendLine($"{device.Name} - {device.Properties["power"]}");
+                var connected = await EnsureDeviceConnection(device);
+
+                if (connected)
+                {
+                    _stringBuilder.AppendLine($"{device.Name} - {device.Properties["power"]}");
+                }
             }
         }
 
@@ -404,8 +446,12 @@ namespace Widtop.Widgets
             {
                 try
                 {
-                    await EnsureDeviceConnection(device);
-                    await device.TurnOff();
+                    var connected = await EnsureDeviceConnection(device);
+
+                    if (connected)
+                    {
+                        await device.TurnOff();
+                    }
                 }
                 catch
                 {
