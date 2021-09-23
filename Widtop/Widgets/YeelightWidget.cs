@@ -375,15 +375,15 @@ namespace Widtop.Widgets
                 return;
             }
 
+            // only run timer action once until sunset
+            _sunlightTimer.Stop();
+
             if (_lightState == LightState.Off)
             {
                 return;
             }
 
             await SetLightState(_connectedDevices, LightState.NightLow, LightSmooth);
-
-            // only run timer action once
-            _sunlightTimer.Stop();
         }
 
         private async Task OnConnectionTimer()
