@@ -11,6 +11,8 @@ namespace Widtop.Utility
         private readonly Stopwatch _stopwatch;
         private readonly TimerCallback _callback;
 
+        private bool _stopped;
+
         public QueuedTimer(TimerCallback callback, int interval) : this(callback, 0, interval)
         {
         }
@@ -21,6 +23,7 @@ namespace Widtop.Utility
             _interval = interval;
             _stopwatch = new Stopwatch();
             _timer = new Timer(Callback, null, dueTime, interval);
+            _stopped = false;
         }
 
         private void Callback(object state)
@@ -34,22 +37,27 @@ namespace Widtop.Utility
             }
             finally
             {
-                var dueTime = Math.Max(
-                    0, 
-                    _interval - _stopwatch.ElapsedMilliseconds
-                );
+                if (!_stopped)
+                {
+                    var dueTime = Math.Max(
+                        0,
+                        _interval - _stopwatch.ElapsedMilliseconds
+                    );
 
-                _timer.Change(dueTime, _interval);
+                    _timer.Change(dueTime, _interval);
+                }
             }
         }
 
         public void Trigger()
         {
+            _stopped = false;
             _timer.Change(0, _interval);
         }
 
         public void Stop()
         {
+            _stopped = true;
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
