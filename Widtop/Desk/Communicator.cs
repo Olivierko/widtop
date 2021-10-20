@@ -9,7 +9,7 @@ namespace Widtop.Desk
 
     public class Communicator
     {
-        private const string PORT_NAME = "COM3";
+        private const string PORT_NAME = "COM5";
         private const int BAUD_RATE = 9600;
 
         private const byte MSG_START_MARK = 0x11;
